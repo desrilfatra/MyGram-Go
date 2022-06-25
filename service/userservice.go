@@ -24,7 +24,7 @@ func NewUserService() Userinterf {
 	return &UserService{}
 }
 
-func (usersvc *UserService) Register(user *entity.User) (*entity.User, error) {
+func (servicuser *UserService) Register(user *entity.User) (*entity.User, error) {
 	if user.Username == "" {
 		return nil, errors.New("Username cannot be empty")
 	}
@@ -41,7 +41,7 @@ func (usersvc *UserService) Register(user *entity.User) (*entity.User, error) {
 	return user, nil
 }
 
-func (usersvc *UserService) Login(user *entity.User, tempPassword string) (*entity.User, error) {
+func (servicuser *UserService) Login(user *entity.User, tempPassword string) (*entity.User, error) {
 	if user.Email == "" {
 		return nil, errors.New("email cannot be empty")
 	}
@@ -53,7 +53,7 @@ func (usersvc *UserService) Login(user *entity.User, tempPassword string) (*enti
 	return user, nil
 }
 
-func (usersvc *UserService) GetToken(id uint, email string, password string) string {
+func (servicuser *UserService) GetToken(id uint, email string, password string) string {
 	claims := jwt.MapClaims{
 		"id":    id,
 		"email": email,
@@ -65,8 +65,8 @@ func (usersvc *UserService) GetToken(id uint, email string, password string) str
 	return signedToken
 }
 
-func (usersvc *UserService) CheckToken(compareToken string, id uint, email string, password string) error {
-	token := usersvc.GetToken(id, email, password)
+func (servicuser *UserService) CheckToken(compareToken string, id uint, email string, password string) error {
+	token := servicuser.GetToken(id, email, password)
 	if compareToken == token {
 		fmt.Println("berhasil")
 		return nil
@@ -77,7 +77,7 @@ func (usersvc *UserService) CheckToken(compareToken string, id uint, email strin
 	//compare
 }
 
-func (usersvc *UserService) VerivyToken(TempToken string) float64 {
+func (servicuser *UserService) VerivyToken(TempToken string) float64 {
 	tokenString := TempToken
 	claims := jwt.MapClaims{}
 	var verivykey []byte

@@ -29,7 +29,7 @@ var (
 const PORT = ":8080"
 
 func main() {
-	db, err = sql.Open("postgres", ConnectDbPsql(host, user, password, dbname, port))
+	db, err = sql.Open("postgres", ConnectDb(host, user, password, dbname, port))
 	if err != nil {
 		panic(err)
 	}
@@ -42,14 +42,14 @@ func main() {
 
 	// handler crud
 	route := mux.NewRouter()
-	userHandler := controller.NewUserHandler(db)
+	usersHandler := controller.NewUsersHandler(db)
 	registerHandler := controller.NewRegisterHandler(db)
 	loginHandler := controller.UserLoginHandler(db)
 
-	route.HandleFunc("/users", userHandler.UserHandler)
+	route.HandleFunc("/users", usersHandler.UsersHandler)
 	route.HandleFunc("/users/register", registerHandler.RegisterUser)
 	route.HandleFunc("/users/login", loginHandler.LoginUser)
-	route.HandleFunc("/users/{id}", userHandler.UserHandler)
+	route.HandleFunc("/users/{id}", usersHandler.UsersHandler)
 	fmt.Println("Now listening on port 0.0.0.0" + PORT)
 	srv := &http.Server{
 		Handler:      route,
@@ -60,7 +60,7 @@ func main() {
 
 	log.Fatal(srv.ListenAndServe())
 }
-func ConnectDbPsql(host, user, password, name string, port int) string {
+func ConnectDb(host, user, password, name string, port int) string {
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
 		"password=%s dbname=%s sslmode=disable",
 		host,

@@ -14,12 +14,12 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-type UserHandler struct {
+type UsersHandler struct {
 	db *sql.DB
 }
 
-// UserHandler implements UserHandlerIF
-func (h *UserHandler) UserHandler(w http.ResponseWriter, r *http.Request) {
+// UsersHandler implements UsersHandlerIF
+func (h *UsersHandler) UsersHandler(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	id := params["id"]
 
@@ -37,10 +37,10 @@ func (h *UserHandler) UserHandler(w http.ResponseWriter, r *http.Request) {
 		h.createUsersHandler(w, r)
 	case http.MethodPut:
 		//users/{id}
-		h.updateUserHandler(w, r, id)
+		h.updateUsersHandler(w, r, id)
 	case http.MethodDelete:
 		//users/{id}
-		h.deleteUserHandler(w, r, id)
+		h.deleteUsersHandler(w, r, id)
 	}
 }
 
@@ -61,11 +61,11 @@ func (h *RegisterHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 
 	newUser.CreatedAt = time.Now()
 	newUser.UpdatedAt = time.Now()
-	sqlStatment := `INSERT INTO public.users
+	sqlQuery := `INSERT INTO public.users
 	(username,email,password,age,createdat,updatedat)
 	values ($1,$2,$3,$4,$5,$6) Returning id` //sesuai dengan nama table
 	fmt.Println("tess")
-	err = h.db.QueryRow(sqlStatment,
+	err = h.db.QueryRow(sqlQuery,
 		newUser.Username,
 		newUser.Email,
 		newUser.Password,
@@ -108,9 +108,9 @@ func (h *LoginHandler) LoginUser(w http.ResponseWriter, r *http.Request) {
 
 		// newUser.Password = string(hashedPassword)
 		// fmt.Println(newUser.Password)
-		sqlStatment := `select * from public.users where email = $1`
+		sqlQuery := `select * from public.users where email = $1`
 
-		err = h.db.QueryRow(sqlStatment, newUser.Email).
+		err = h.db.QueryRow(sqlQuery, newUser.Email).
 			Scan(&newUser.Id, &newUser.Username, &newUser.Email, &newUser.Password, &newUser.Age, &newUser.CreatedAt, &newUser.UpdatedAt)
 		if err != nil {
 			fmt.Println(err)
@@ -133,8 +133,8 @@ func (h *LoginHandler) LoginUser(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-type UserHandlerIF interface {
-	UserHandler(w http.ResponseWriter, r *http.Request)
+type UsersHandlerIF interface {
+	UsersHandler(w http.ResponseWriter, r *http.Request)
 }
 
 type RegisterHandlerIF interface {
@@ -145,8 +145,8 @@ type LoginHandlerIF interface {
 	LoginUser(w http.ResponseWriter, r *http.Request)
 }
 
-func NewUserHandler(db *sql.DB) UserHandlerIF {
-	return &UserHandler{db: db}
+func NewUsersHandler(db *sql.DB) UsersHandlerIF {
+	return &UsersHandler{db: db}
 }
 
 func NewRegisterHandler(db *sql.DB) RegisterHandlerIF {
@@ -157,11 +157,11 @@ func UserLoginHandler(db *sql.DB) LoginHandlerIF {
 	return &LoginHandler{db: db}
 }
 
-func (h *UserHandler) getUsersHandler(w http.ResponseWriter, r *http.Request) {
+func (h *UsersHandler) getUsersHandler(w http.ResponseWriter, r *http.Request) {
 	users := []*entity.User{}
-	sqlStatment := `SELECT  * from users` //sesuai dengan nama table
+	sqlQuery := `SELECT  * from users` //sesuai dengan nama table
 
-	rows, err := h.db.Query(sqlStatment)
+	rows, err := h.db.Query(sqlQuery)
 	if err != nil {
 		panic(err)
 	}
@@ -178,10 +178,10 @@ func (h *UserHandler) getUsersHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(jsonData)
 }
 
-func (h *UserHandler) getUsersByIDHandler(w http.ResponseWriter, r *http.Request, id string) {
+func (h *UsersHandler) getUsersByIDHandler(w http.ResponseWriter, r *http.Request, id string) {
 	users := []*entity.User{}
-	sqlStatment := `SELECT  * from users where id = $1` //sesuai dengan nama table
-	rows, err := h.db.Query(sqlStatment)
+	sqlQuery := `SELECT  * from users where id = $1` //sesuai dengan nama table
+	rows, err := h.db.Query(sqlQuery)
 	if err != nil {
 		panic(err)
 	}
@@ -198,14 +198,14 @@ func (h *UserHandler) getUsersByIDHandler(w http.ResponseWriter, r *http.Request
 	w.Write(jsonData)
 }
 
-func (h *UserHandler) createUsersHandler(w http.ResponseWriter, r *http.Request) {
+func (h *UsersHandler) createUsersHandler(w http.ResponseWriter, r *http.Request) {
 
 	var newUser entity.User
 	json.NewDecoder(r.Body).Decode(&newUser)
-	sqlStatment := `insert into users
+	sqlQuery := `insert into users
 	(username,email,password,age,createdat,updatedat)
 	values ($1,$2,$3,$4,$5,$5)` //sesuai dengan nama table
-	res, err := h.db.Exec(sqlStatment,
+	res, err := h.db.Exec(sqlQuery,
 		newUser.Username,
 		newUser.Email,
 		newUser.Password,
@@ -221,21 +221,21 @@ func (h *UserHandler) createUsersHandler(w http.ResponseWriter, r *http.Request)
 		panic(err)
 	}
 
-	w.Write([]byte(fmt.Sprint("User  update ", count)))
+	w.Write([]byte(fmt.Sprint("User update ", count)))
 	return
 }
 
-func (h *UserHandler) updateUserHandler(w http.ResponseWriter, r *http.Request, id string) {
+func (h *UsersHandler) updateUsersHandler(w http.ResponseWriter, r *http.Request, id string) {
 	if id != "" { // get by id
 		var newUser entity.User
 		json.NewDecoder(r.Body).Decode(&newUser)
 		newUser.CreatedAt = time.Now()
 		newUser.UpdatedAt = time.Now()
-		sqlstatment := `
+		sqlQuery := `
 		update users set username = $1, email = $2, password = $3, createdat = $4, updatedat = $5 
 		where id = $6`
 
-		res, err := h.db.Exec(sqlstatment,
+		res, err := h.db.Exec(sqlQuery,
 			newUser.Username,
 			newUser.Email,
 			newUser.Password,
@@ -256,7 +256,7 @@ func (h *UserHandler) updateUserHandler(w http.ResponseWriter, r *http.Request, 
 	}
 }
 
-func (h *UserHandler) deleteUserHandler(w http.ResponseWriter, r *http.Request, id string) {
+func (h *UsersHandler) deleteUsersHandler(w http.ResponseWriter, r *http.Request, id string) {
 	sqlstament := `DELETE from users where id = $1;`
 	if idInt, err := strconv.Atoi(id); err == nil {
 		res, err := h.db.Exec(sqlstament, idInt)
