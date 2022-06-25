@@ -16,7 +16,7 @@ const (
 	host     = "localhost"
 	port     = 5432
 	user     = "postgres"
-	password = "123456" //ganti sesuai nama password postgres
+	password = "123456" 
 	dbname   = "db-sql-go"
 )
 
