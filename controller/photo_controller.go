@@ -21,16 +21,15 @@ func (ph *PhotoHand) Photo(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	id := params["id"]
 	fmt.Println(id)
-
+	servic := service.NewUserService()
+	reqToken := r.Header.Get("Authorization")
+	splitToken := strings.Split(reqToken, "Bearer ")
+	reqToken = splitToken[1]
+	temp_id := servic.VerivyToken(reqToken)
+	fmt.Println(temp_id)
 	switch r.Method {
 	case http.MethodGet:
-		fmt.Println("Get")
-		servic := service.NewUserService()
-		reqToken := r.Header.Get("Authorization")
-		splitToken := strings.Split(reqToken, "Bearer ")
-		reqToken = splitToken[1]
-		temp_id := servic.VerivyToken(reqToken)
-		fmt.Println(temp_id)
+		fmt.Println("Get Photo")
 		sqlQuery := `
 		select p.id, p.title,p.caption, p.photo_url, p.user_id, p.createdat,
    		p.updatedat, u.email, u.username 
@@ -43,15 +42,16 @@ func (ph *PhotoHand) Photo(w http.ResponseWriter, r *http.Request) {
 		photos := []*entity.ResponseGetPhoto{}
 		for rows.Next() {
 			var photo entity.ResponseGetPhoto
-			if scanerr := rows.Scan(&photo.Id, &photo.Title, &photo.Caption, &photo.Url, &photo.User_id, &photo.CreatedAt, &photo.UpdatedAt, &photo.Users.Email, &photo.Users.Username); scanerr != nil {
+			if scanerr := rows.Scan(&photo.Id, &photo.Title, &photo.Caption, &photo.Url, &photo.User_id,
+				&photo.CreatedAt, &photo.UpdatedAt, &photo.Users.Email, &photo.Users.Username); scanerr != nil {
 				fmt.Println("Scan error", scanerr)
 			}
 			photos = append(photos, &photo)
 		}
 		jsonData, _ := json.Marshal(&photos)
 		w.Header().Add("Content-Type", "application/json")
-		w.Write(jsonData)
 		w.WriteHeader(200)
+		w.Write(jsonData)
 
 	}
 }
