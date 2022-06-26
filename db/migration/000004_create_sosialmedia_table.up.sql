@@ -1,9 +1,9 @@
 begin;
 
-create table if not exists sosialmedia(
+create table if not exists socialmedia(
 Id SERIAL primary key,
 Name varchar(100) not null,
-Sosial_media_url varchar(100) not null,
+Social_media_url varchar(100) not null,
 UserId int not null references public.users(id)
 );
 
