@@ -61,6 +61,11 @@ func main() {
 	route.HandleFunc("/comments", commentHandler.Comment)
 	route.HandleFunc("/comments/{id}", commentHandler.Comment)
 
+	//handler comment
+	sosialmediaHandler := controller.NewSosialMedia(db)
+	route.HandleFunc("/sosialmedia", sosialmediaHandler.SosialMedia)
+	route.HandleFunc("/sosialmedia/{id}", sosialmediaHandler.SosialMedia)
+
 	fmt.Println("Now listening on port 0.0.0.0" + PORT)
 	srv := &http.Server{
 		Handler:      route,
