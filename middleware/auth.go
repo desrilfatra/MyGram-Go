@@ -23,7 +23,7 @@ func Auth(next http.Handler) http.Handler {
 		reqToken = splitToken[1]
 		// fmt.Println(reqToken)
 		fmt.Println("Auth token")
-		temp_id, err := servic.VerivyToken(reqToken)
+		temp_id, err := servic.VerifToken(reqToken)
 		if err != nil {
 			w.Write([]byte(fmt.Sprint(err)))
 		}

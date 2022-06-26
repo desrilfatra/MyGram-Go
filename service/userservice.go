@@ -15,7 +15,7 @@ type Userinterf interface {
 	Update(user *entity.User) (*entity.User, error)
 	GetToken(id uint, email string, password string) string
 	CheckToken(compareToken string, id uint, email string, password string) error
-	VerivyToken(tempToken string) (float64, error)
+	VerifToken(tempToken string) (float64, error)
 }
 
 type UserService struct {
@@ -88,7 +88,7 @@ func (servicuser *UserService) CheckToken(compareToken string, id uint, email st
 	//compare
 }
 
-func (servicuser *UserService) VerivyToken(TempToken string) (float64, error) {
+func (servicuser *UserService) VerifToken(TempToken string) (float64, error) {
 	tokenString := TempToken
 	claims := jwt.MapClaims{}
 	var verivykey []byte
