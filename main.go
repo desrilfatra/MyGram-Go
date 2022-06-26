@@ -16,7 +16,7 @@ const (
 	host     = "localhost"
 	port     = 5432
 	user     = "postgres"
-	password = "123456" 
+	password = "123456"
 	dbname   = "db-sql-go"
 )
 
@@ -40,7 +40,7 @@ func main() {
 	}
 	fmt.Println("Succesfully connected to database")
 
-	// handler crud
+	// handler user
 	route := mux.NewRouter()
 	usersHandler := controller.NewUsersHandler(db)
 	registerHandler := controller.NewRegisterHandler(db)
@@ -48,8 +48,14 @@ func main() {
 
 	route.HandleFunc("/users", usersHandler.UsersHandler)
 	route.HandleFunc("/users/register", registerHandler.RegisterUser)
-	route.HandleFunc("/users/login", loginHandler.LoginUser)
+	route.HandleFunc("/users/login", loginHandler.Login)
 	route.HandleFunc("/users/{id}", usersHandler.UsersHandler)
+
+	//handler photo
+	photoHandler := controller.NewPhoto(db)
+	route.HandleFunc("/photos", photoHandler.Photo)
+	route.HandleFunc("/photos/{id}", photoHandler.Photo)
+
 	fmt.Println("Now listening on port 0.0.0.0" + PORT)
 	srv := &http.Server{
 		Handler:      route,
