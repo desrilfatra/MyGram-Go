@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"mygram-go/entity"
 	"mygram-go/middleware"
+	"mygram-go/service"
 	"net/http"
+	"time"
 
 	"github.com/gorilla/mux"
 )
@@ -33,7 +35,7 @@ func (ch *CommentHand) Comment(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Println(user)
 	fmt.Println(user.Id)
-	// commentserv := service.CommentServic()
+	commentservic := service.CommentServic()
 	switch r.Method {
 	case http.MethodGet:
 		fmt.Println("Get Comments")
@@ -62,5 +64,41 @@ func (ch *CommentHand) Comment(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(200)
 		w.Write(jsonData)
 
+	case http.MethodPost:
+		fmt.Println("POST")
+		var newComment entity.Commment
+		json.NewDecoder(r.Body).Decode(&newComment)
+		err := commentservic.CekPostComment(newComment.Message)
+		if err != nil {
+			w.Write([]byte(fmt.Sprint(err)))
+		} else {
+			sqlStament := `Insert into public.comment
+			(user_id,photo_id,message,createdat,updatedat)
+			values ($1,$2,$3,$4,$4) Returning id`
+			// intId, err := strconv.Atoi(id)
+			err = ch.db.QueryRow(sqlStament,
+				user.Id,
+				newComment.Photo_id,
+				newComment.Message,
+				time.Now(),
+			).Scan(&newComment.Id)
+			if err != nil {
+				w.Write([]byte(fmt.Sprint(err)))
+			}
+			response := entity.ResponsePostComment{
+				Id:        newComment.Id,
+				Message:   newComment.Message,
+				Photo_id:  newComment.Photo_id,
+				User_id:   int(user.Id),
+				CreatedAt: time.Now(),
+			}
+
+			jsonData, _ := json.Marshal(&response)
+
+			w.Header().Add("Content-Type", "application/json")
+			w.WriteHeader(201)
+			w.Write(jsonData)
+
+		}
 	}
 }

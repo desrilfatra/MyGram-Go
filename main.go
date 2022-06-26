@@ -60,6 +60,7 @@ func main() {
 	//handler comment
 	commentHandler := controller.NewComment(db)
 	route.Handle("/comments", middleware.Auth(http.HandlerFunc(commentHandler.Comment))).Methods("GET")
+	route.Handle("/comments", middleware.Auth(http.HandlerFunc(commentHandler.Comment))).Methods("POST")
 
 	//handler comment
 	sosialmediaHandler := controller.NewSosialMedia(db)
