@@ -73,8 +73,8 @@ func (sm *SosialMediaHand) SosialMedia(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			w.Write([]byte(fmt.Sprint(err)))
 		} else {
-			sqlQuery := `insert into public.sosialmedia
-			(name,sosial_media_url,userid)
+			sqlQuery := `insert into public.socialmedia
+			(name,social_media_url,userid)
 			values ($1,$2,$3) Returning id`
 			// intId, err := strconv.Atoi(id)
 			err = sm.db.QueryRow(sqlQuery, newSocialMedia.Name, newSocialMedia.Social_Media_Url, user.Id).Scan(&newSocialMedia.Id)
@@ -83,8 +83,8 @@ func (sm *SosialMediaHand) SosialMedia(w http.ResponseWriter, r *http.Request) {
 			}
 
 			response := entity.ResponsePostSocialMedia{}
-			sqlQuery1 := `select s.id,s.name,s.sosial_media_url,s.userid,u.createdat 
-			from public.sosialmedia s left join public.users u on s.userid = u.id where s.id = $1`
+			sqlQuery1 := `select s.id,s.name,s.social_media_url,s.userid,u.created_at 
+			from public.socialmedia s left join public.users u on s.userid = u.id where s.id = $1`
 			err = sm.db.QueryRow(sqlQuery1, newSocialMedia.Id).Scan(&response.Id, &response.Name,
 				&response.Social_Media_Url, &response.User_id, &response.CreatedAt)
 			if err != nil {
