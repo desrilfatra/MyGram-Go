@@ -8,8 +8,8 @@ type User struct {
 	Email     string    `json:"email"`
 	Password  string    `json:"password"`
 	Age       int       `json:"age"`
-	CreatedAt time.Time `json:"createdat"`
-	UpdatedAt time.Time `json:"updatedat"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 type ResponseRegister struct {
