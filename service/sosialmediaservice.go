@@ -3,12 +3,12 @@ package service
 import "errors"
 
 type SocialMediaInterf interface {
-	CekInputanSocialMedia(name, social_media_url string) error
+	CekPostSocialMedia(name, social_media_url string) error
 }
 type SocialmediaSer struct{}
 
 // CekInputanSocialMedia implements SocialmediaIfac
-func (*SocialmediaSer) CekInputanSocialMedia(name, social_media_url string) error {
+func (sc *SocialmediaSer) CekPostSocialMedia(name, social_media_url string) error {
 	if name == "" {
 		return errors.New("name cannot be empty")
 	}
