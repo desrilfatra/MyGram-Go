@@ -31,8 +31,8 @@ func (ph *PhotoHand) Photo(w http.ResponseWriter, r *http.Request) {
 	case http.MethodGet:
 		fmt.Println("Get Photo")
 		sqlQuery := `
-		select p.id, p.title,p.caption, p.photo_url, p.user_id, p.createdat,
-   		p.updatedat, u.email, u.username 
+		select p.id, p.title,p.caption, p.photo_url, p.user_id, p.created_at,
+   		p.updated_at, u.email, u.username 
     	from public.photo as p inner join public.users as u on p.user_id = u.id`
 		rows, err := ph.db.Query(sqlQuery)
 		if err != nil {
@@ -67,7 +67,7 @@ func (ph *PhotoHand) Photo(w http.ResponseWriter, r *http.Request) {
 		} else {
 			//query insert
 			sqlQuery1 := `insert into public.photo
-			(title,caption,photo_url,user_id,createdat,updatedat)
+			(title,caption,photo_url,user_id,created_at,updated_at)
 			values ($1,$2,$3,$4,$5,$5) Returning id`
 			//query.scan
 			err = ph.db.QueryRow(sqlQuery1,
