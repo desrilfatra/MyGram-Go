@@ -48,8 +48,8 @@ type RegisterHandler struct {
 	db *sql.DB
 }
 
-// RegisterUser implements RegisterHandlerIF
-func (h *RegisterHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
+// Register implements RegisterHandlerIF
+func (h *RegisterHandler) Register(w http.ResponseWriter, r *http.Request) {
 	var newUser entity.User
 	json.NewDecoder(r.Body).Decode(&newUser)
 	newPassword := []byte(newUser.Password)
@@ -138,7 +138,7 @@ type UsersHandlerIF interface {
 }
 
 type RegisterHandlerIF interface {
-	RegisterUser(w http.ResponseWriter, r *http.Request)
+	Register(w http.ResponseWriter, r *http.Request)
 }
 
 type LoginHandlerIF interface {
