@@ -160,19 +160,19 @@ func (h *UsersHandler) Updateusr(w http.ResponseWriter, r *http.Request, id stri
 		servic := service.NewUserService()
 		validasiUser, err := servic.Update(validasiUser)
 		if err != nil {
-
+			fmt.Println(err)
 		}
 
 		newUser.UpdatedAt = time.Now()
 		sqlQuery := `
-		update public.users set username = $1, email = $2, password = $3, updatedat = $4 
-		where id = $5`
+		UPDATE public.users set email = $1, username= $2, updatedat = $3 
+		where id = $4`
 
 		res, err := h.db.Exec(sqlQuery,
-			newUser.Username,
 			newUser.Email,
-			newUser.Password,
+			newUser.Username,
 			newUser.UpdatedAt,
+			id,
 		)
 		fmt.Println(res)
 		if err != nil {
@@ -214,7 +214,7 @@ func (h *UsersHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(user)
 	fmt.Println(user.Id)
 	// if temp_id != nil{}
-	sqlstament := `DELETE from public.users where id = $1;`
+	sqlstament := `DELETE from public.users where id = $1`
 	_, err := h.db.Exec(sqlstament, user.Id)
 
 	if err != nil {
