@@ -51,7 +51,9 @@ func (ch *CommentHand) Comment(w http.ResponseWriter, r *http.Request) {
 		comments := []*entity.ResponseGetComment{}
 		for rows.Next() {
 			var comment entity.ResponseGetComment
-			if scanerr := rows.Scan(&comment.Id, &comment.Message, &comment.Photo_id, &comment.User_id, &comment.UpdatedAt, &comment.CreatedAt, &comment.User.Id, &comment.User.Email, &comment.User.Username, &comment.Photo.Id, &comment.Photo.Title, &comment.Photo.Caption, &comment.Photo.Url, &comment.Photo.User_id); scanerr != nil {
+			if scanerr := rows.Scan(&comment.Id, &comment.Message, &comment.Photo_id, &comment.User_id, &comment.UpdatedAt,
+				&comment.CreatedAt, &comment.User.Id, &comment.User.Email, &comment.User.Username, &comment.Photo.Id,
+				&comment.Photo.Title, &comment.Photo.Caption, &comment.Photo.Url, &comment.Photo.User_id); scanerr != nil {
 				fmt.Println("Scan error", scanerr)
 			}
 			comments = append(comments, &comment)
