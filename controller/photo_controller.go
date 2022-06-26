@@ -5,9 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"mygram-go/entity"
-	"mygram-go/service"
+	"mygram-go/middleware"
 	"net/http"
-	"strings"
 
 	"github.com/gorilla/mux"
 )
@@ -21,12 +20,11 @@ func (ph *PhotoHand) Photo(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	id := params["id"]
 	fmt.Println(id)
-	servic := service.NewUserService()
-	reqToken := r.Header.Get("Authorization")
-	splitToken := strings.Split(reqToken, "Bearer ")
-	reqToken = splitToken[1]
-	temp_id := servic.VerivyToken(reqToken)
-	fmt.Println(temp_id)
+	ctx := r.Context()
+	user := middleware.ForUser(ctx)
+
+	fmt.Println(user)
+	fmt.Println(user.Id)
 	switch r.Method {
 	case http.MethodGet:
 		fmt.Println("Get Photo")

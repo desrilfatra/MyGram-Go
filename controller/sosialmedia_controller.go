@@ -5,9 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"mygram-go/entity"
-	"mygram-go/service"
+	"mygram-go/middleware"
 	"net/http"
-	"strings"
 
 	"github.com/gorilla/mux"
 )
@@ -29,12 +28,14 @@ func (sm *SosialMediaHand) SosialMedia(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	id := params["id"]
 	fmt.Println(id)
-	serv := service.NewUserService()
-	reqToken := r.Header.Get("Authorization")
-	splitToken := strings.Split(reqToken, "Bearer ")
-	reqToken = splitToken[1]
-	temp_id := serv.VerivyToken(reqToken)
-	fmt.Println(temp_id)
+
+	ctx := r.Context()
+	user := middleware.ForUser(ctx)
+
+	fmt.Println(user)
+	fmt.Println(user.Id)
+	// sosialmediaser := service.SocialMediaSerN()
+
 	switch r.Method {
 	case http.MethodGet:
 		fmt.Println("Get Social Media")

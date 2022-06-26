@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"mygram-go/controller"
+	"mygram-go/middleware"
 	"net/http"
 	"time"
 
@@ -46,24 +47,24 @@ func main() {
 	registerHandler := controller.NewRegisterHandler(db)
 	loginHandler := controller.UserLoginHandler(db)
 
-	route.HandleFunc("/users", usersHandler.UsersHandler)
 	route.HandleFunc("/users/register", registerHandler.Register)
 	route.HandleFunc("/users/login", loginHandler.Login)
-	route.HandleFunc("/users/{id}", usersHandler.UsersHandler)
+	route.Handle("/users", middleware.AuthCekToken(http.HandlerFunc(usersHandler.UsersHandler))).Methods("PUT")
+	route.Handle("/users/{id}", middleware.AuthCekToken(http.HandlerFunc(usersHandler.UsersHandler))).Methods("Delete")
 
 	//handler photo
 	photoHandler := controller.NewPhoto(db)
-	route.HandleFunc("/photos", photoHandler.Photo)
+	route.Handle("/photos", middleware.AuthCekToken(http.HandlerFunc(photoHandler.Photo))).Methods("GET")
 	route.HandleFunc("/photos/{id}", photoHandler.Photo)
 
 	//handler comment
 	commentHandler := controller.NewComment(db)
-	route.HandleFunc("/comments", commentHandler.Comment)
+	route.Handle("/comments", middleware.AuthCekToken(http.HandlerFunc(commentHandler.Comment))).Methods("GET")
 	route.HandleFunc("/comments/{id}", commentHandler.Comment)
 
 	//handler comment
 	sosialmediaHandler := controller.NewSosialMedia(db)
-	route.HandleFunc("/sosialmedia", sosialmediaHandler.SosialMedia)
+	route.Handle("/sosialmedia", middleware.AuthCekToken(http.HandlerFunc(sosialmediaHandler.SosialMedia))).Methods("GET")
 	route.HandleFunc("/sosialmedia/{id}", sosialmediaHandler.SosialMedia)
 
 	fmt.Println("Now listening on port 0.0.0.0" + PORT)
