@@ -89,11 +89,11 @@ type LoginHandler struct {
 	db *sql.DB
 }
 
-// LoginUser implements LoginHandlerIF
-func (h *LoginHandler) LoginUser(w http.ResponseWriter, r *http.Request) {
+// Login implements LoginHandlerIF
+func (h *LoginHandler) Login(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
 		var newUser entity.User
-		var validasiUser *entity.User
+		var validate *entity.User
 
 		json.NewDecoder(r.Body).Decode(&newUser)
 		fmt.Println(r.Body)
@@ -103,7 +103,7 @@ func (h *LoginHandler) LoginUser(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			panic(err)
 		}
-		validasiUser = &newUser
+		validate = &newUser
 		serv := service.NewUserService()
 
 		// newUser.Password = string(hashedPassword)
@@ -116,7 +116,7 @@ func (h *LoginHandler) LoginUser(w http.ResponseWriter, r *http.Request) {
 			fmt.Println(err)
 		}
 		fmt.Println(newUser)
-		validasiUser, err = serv.Login(validasiUser, tempPassword)
+		validate, err = serv.Login(validate, tempPassword)
 		if err != nil {
 			fmt.Println(err)
 			w.Write([]byte(fmt.Sprint(err)))
@@ -142,7 +142,7 @@ type RegisterHandlerIF interface {
 }
 
 type LoginHandlerIF interface {
-	LoginUser(w http.ResponseWriter, r *http.Request)
+	Login(w http.ResponseWriter, r *http.Request)
 }
 
 func NewUsersHandler(db *sql.DB) UsersHandlerIF {
@@ -159,7 +159,7 @@ func UserLoginHandler(db *sql.DB) LoginHandlerIF {
 
 func (h *UsersHandler) getUsersHandler(w http.ResponseWriter, r *http.Request) {
 	users := []*entity.User{}
-	sqlQuery := `SELECT  * from users` //sesuai dengan nama table
+	sqlQuery := `SELECT * from users` //sesuai dengan nama table
 
 	rows, err := h.db.Query(sqlQuery)
 	if err != nil {
@@ -180,7 +180,7 @@ func (h *UsersHandler) getUsersHandler(w http.ResponseWriter, r *http.Request) {
 
 func (h *UsersHandler) getUsersByIDHandler(w http.ResponseWriter, r *http.Request, id string) {
 	users := []*entity.User{}
-	sqlQuery := `SELECT  * from users where id = $1` //sesuai dengan nama table
+	sqlQuery := `SELECT * from users where id = $1` //sesuai dengan nama table
 	rows, err := h.db.Query(sqlQuery)
 	if err != nil {
 		panic(err)
@@ -202,7 +202,7 @@ func (h *UsersHandler) createUsersHandler(w http.ResponseWriter, r *http.Request
 
 	var newUser entity.User
 	json.NewDecoder(r.Body).Decode(&newUser)
-	sqlQuery := `insert into users
+	sqlQuery := `INSERT INTO users
 	(username,email,password,age,createdat,updatedat)
 	values ($1,$2,$3,$4,$5,$5)`
 	res, err := h.db.Exec(sqlQuery,
