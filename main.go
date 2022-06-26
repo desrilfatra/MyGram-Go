@@ -47,7 +47,7 @@ func main() {
 	loginHandler := controller.UserLoginHandler(db)
 
 	route.HandleFunc("/users", usersHandler.UsersHandler)
-	route.HandleFunc("/users/register", registerHandler.RegisterUser)
+	route.HandleFunc("/users/register", registerHandler.Register)
 	route.HandleFunc("/users/login", loginHandler.Login)
 	route.HandleFunc("/users/{id}", usersHandler.UsersHandler)
 
