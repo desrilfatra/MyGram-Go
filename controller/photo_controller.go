@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"mygram-go/entity"
 	"mygram-go/middleware"
+	"mygram-go/service"
 	"net/http"
+	"time"
 
 	"github.com/gorilla/mux"
 )
@@ -50,6 +52,48 @@ func (ph *PhotoHand) Photo(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Content-Type", "application/json")
 		w.WriteHeader(200)
 		w.Write(jsonData)
+
+	case http.MethodPost:
+		fmt.Println("Post")
+
+		var newPhotos entity.Photo
+		json.NewDecoder(r.Body).Decode(&newPhotos)
+		fmt.Println(newPhotos)
+		//validasi user
+		photoserv := service.NewPhotoService()
+		err := photoserv.CekPostPhoto(newPhotos.Title, newPhotos.Url)
+		if err != nil {
+			w.Write([]byte(fmt.Sprint(err)))
+		} else {
+			//query insert
+			sqlQuery1 := `insert into public.photo
+			(title,caption,photo_url,user_id,createdat,updatedat)
+			values ($1,$2,$3,$4,$5,$5) Returning id`
+			//query.scan
+			err = ph.db.QueryRow(sqlQuery1,
+				newPhotos.Title,
+				newPhotos.Caption,
+				newPhotos.Url,
+				user.Id,
+				time.Now(),
+			).Scan(&newPhotos.Id)
+			if err != nil {
+				w.Write([]byte(fmt.Sprint(err)))
+			}
+			response := entity.ResponsePostPhoto{
+				Id:        newPhotos.Id,
+				Title:     newPhotos.Title,
+				Caption:   newPhotos.Caption,
+				Url:       newPhotos.Url,
+				User_id:   int(user.Id),
+				CreatedAt: time.Now(),
+			}
+
+			jsonData, _ := json.Marshal(&response)
+			w.Header().Add("Content-Type", "application/json")
+			w.Write(jsonData)
+			w.WriteHeader(201)
+		}
 
 	}
 }
