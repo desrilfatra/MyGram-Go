@@ -12,9 +12,10 @@ import (
 type Userinterf interface {
 	Register(user *entity.User) (*entity.User, error)
 	Login(user *entity.User, tempPassword string) (*entity.User, error)
+	Update(user *entity.User) (*entity.User, error)
 	GetToken(id uint, email string, password string) string
 	CheckToken(compareToken string, id uint, email string, password string) error
-	VerivyToken(TempToken string) float64
+	VerivyToken(tempToken string) (float64, error)
 }
 
 type UserService struct {
@@ -53,6 +54,16 @@ func (servicuser *UserService) Login(user *entity.User, tempPassword string) (*e
 	return user, nil
 }
 
+func (servicuser *UserService) Update(user *entity.User) (*entity.User, error) {
+	if user.Email == "" {
+		return nil, errors.New("email cannot be empty")
+	}
+	if user.Username == "" {
+		return nil, errors.New("username cannot be empty")
+	}
+	return user, nil
+}
+
 func (servicuser *UserService) GetToken(id uint, email string, password string) string {
 	claims := jwt.MapClaims{
 		"id":    id,
@@ -77,7 +88,7 @@ func (servicuser *UserService) CheckToken(compareToken string, id uint, email st
 	//compare
 }
 
-func (servicuser *UserService) VerivyToken(TempToken string) float64 {
+func (servicuser *UserService) VerivyToken(TempToken string) (float64, error) {
 	tokenString := TempToken
 	claims := jwt.MapClaims{}
 	var verivykey []byte
@@ -87,5 +98,8 @@ func (servicuser *UserService) VerivyToken(TempToken string) float64 {
 	payload := token.Claims.(jwt.MapClaims)
 	id := payload["id"].(float64)
 	// fmt.Println(token.Claims.Valid())
-	return id
+	return id, nil
+}
+func isIntegral(val float64) bool {
+	return val == float64(int(val))
 }

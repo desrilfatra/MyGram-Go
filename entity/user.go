@@ -18,3 +18,11 @@ type ResponseRegister struct {
 	Id       int    `json:"id"`
 	Username string `json:"username"`
 }
+
+type ResponseUpdate struct {
+	Id        int       `json:"id"`
+	Email     string    `json:"email"`
+	Username  string    `json:"username"`
+	Age       int       `json:"age"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
