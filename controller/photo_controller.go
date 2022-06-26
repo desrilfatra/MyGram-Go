@@ -31,11 +31,11 @@ func (ph *PhotoHand) Photo(w http.ResponseWriter, r *http.Request) {
 		reqToken = splitToken[1]
 		temp_id := servic.VerivyToken(reqToken)
 		fmt.Println(temp_id)
-		sqlStament := `
+		sqlQuery := `
 		select p.id, p.title,p.caption, p.photo_url, p.user_id, p.createdat,
    		p.updatedat, u.email, u.username 
     	from public.photo as p inner join public.users as u on p.user_id = u.id`
-		rows, err := ph.db.Query(sqlStament)
+		rows, err := ph.db.Query(sqlQuery)
 		if err != nil {
 			fmt.Println(err)
 		}
