@@ -15,7 +15,7 @@ type tempcontext struct {
 	data string
 }
 
-func AuthCekToken(next http.Handler) http.Handler {
+func Auth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		servic := service.NewUserService()
 		reqToken := r.Header.Get("Authorization")
