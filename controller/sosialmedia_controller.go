@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"mygram-go/entity"
 	"mygram-go/middleware"
+	"mygram-go/service"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -34,7 +35,7 @@ func (sm *SosialMediaHand) SosialMedia(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Println(user)
 	fmt.Println(user.Id)
-	// sosialmediaser := service.SocialMediaSerN()
+	sosialmediaser := service.SocialMediaSerN()
 
 	switch r.Method {
 	case http.MethodGet:
@@ -63,6 +64,38 @@ func (sm *SosialMediaHand) SosialMedia(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Content-Type", "application/json")
 		w.WriteHeader(200)
 		w.Write(jsonData)
+
+	case http.MethodPost:
+		fmt.Println("POST")
+		var newSocialMedia entity.SocialMedia
+		json.NewDecoder(r.Body).Decode(&newSocialMedia)
+		err := sosialmediaser.CekPostSocialMedia(newSocialMedia.Name, newSocialMedia.Social_Media_Url)
+		if err != nil {
+			w.Write([]byte(fmt.Sprint(err)))
+		} else {
+			sqlQuery := `insert into public.sosialmedia
+			(name,sosial_media_url,userid)
+			values ($1,$2,$3) Returning id`
+			// intId, err := strconv.Atoi(id)
+			err = sm.db.QueryRow(sqlQuery, newSocialMedia.Name, newSocialMedia.Social_Media_Url, user.Id).Scan(&newSocialMedia.Id)
+			if err != nil {
+				fmt.Println(err)
+			}
+
+			response := entity.ResponsePostSocialMedia{}
+			sqlQuery1 := `select s.id,s.name,s.sosial_media_url,s.userid,u.createdat 
+			from public.sosialmedia s left join public.users u on s.userid = u.id where s.id = $1`
+			err = sm.db.QueryRow(sqlQuery1, newSocialMedia.Id).Scan(&response.Id, &response.Name,
+				&response.Social_Media_Url, &response.User_id, &response.CreatedAt)
+			if err != nil {
+				w.Write([]byte(fmt.Sprint(err)))
+			}
+
+			jsonData, _ := json.Marshal(&response)
+			w.Header().Add("Content-Type", "application/json")
+			w.WriteHeader(201)
+			w.Write(jsonData)
+		}
 
 	}
 }

@@ -64,8 +64,8 @@ func main() {
 
 	//handler comment
 	sosialmediaHandler := controller.NewSosialMedia(db)
-	route.Handle("/sosialmedia", middleware.Auth(http.HandlerFunc(sosialmediaHandler.SosialMedia))).Methods("GET")
-
+	route.Handle("/sosialmedias", middleware.Auth(http.HandlerFunc(sosialmediaHandler.SosialMedia))).Methods("GET")
+	route.Handle("/sosialmedias", middleware.Auth(http.HandlerFunc(sosialmediaHandler.SosialMedia))).Methods("POST")
 	fmt.Println("Now listening on port 0.0.0.0" + PORT)
 	srv := &http.Server{
 		Handler:      route,
