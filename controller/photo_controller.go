@@ -43,8 +43,8 @@ func (ph *PhotoHand) Photo(w http.ResponseWriter, r *http.Request) {
 		photos := []*entity.ResponseGetPhoto{}
 		for rows.Next() {
 			var photo entity.ResponseGetPhoto
-			if serr := rows.Scan(&photo.Id, &photo.Title, &photo.Caption, &photo.Url, &photo.User_id, &photo.CreatedAt, &photo.UpdatedAt, &photo.Users.Email, &photo.Users.Username); serr != nil {
-				fmt.Println("Scan error", serr)
+			if scanerr := rows.Scan(&photo.Id, &photo.Title, &photo.Caption, &photo.Url, &photo.User_id, &photo.CreatedAt, &photo.UpdatedAt, &photo.Users.Email, &photo.Users.Username); scanerr != nil {
+				fmt.Println("Scan error", scanerr)
 			}
 			photos = append(photos, &photo)
 		}
