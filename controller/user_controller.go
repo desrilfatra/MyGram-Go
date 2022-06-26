@@ -204,7 +204,7 @@ func (h *UsersHandler) createUsersHandler(w http.ResponseWriter, r *http.Request
 	json.NewDecoder(r.Body).Decode(&newUser)
 	sqlQuery := `insert into users
 	(username,email,password,age,createdat,updatedat)
-	values ($1,$2,$3,$4,$5,$5)` //sesuai dengan nama table
+	values ($1,$2,$3,$4,$5,$5)`
 	res, err := h.db.Exec(sqlQuery,
 		newUser.Username,
 		newUser.Email,
@@ -221,7 +221,7 @@ func (h *UsersHandler) createUsersHandler(w http.ResponseWriter, r *http.Request
 		panic(err)
 	}
 
-	w.Write([]byte(fmt.Sprint("User update ", count)))
+	w.Write([]byte(fmt.Sprint("User Save ", count)))
 	return
 }
 
