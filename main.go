@@ -49,23 +49,20 @@ func main() {
 
 	route.HandleFunc("/users/register", registerHandler.Register)
 	route.HandleFunc("/users/login", loginHandler.Login)
-	route.Handle("/users", middleware.AuthCekToken(http.HandlerFunc(usersHandler.UsersHandler))).Methods("PUT")
-	route.Handle("/users/{id}", middleware.AuthCekToken(http.HandlerFunc(usersHandler.UsersHandler))).Methods("Delete")
+	route.Handle("/users", middleware.Auth(http.HandlerFunc(usersHandler.UsersHandler))).Methods("PUT")
+	route.Handle("/users/{id}", middleware.Auth(http.HandlerFunc(usersHandler.UsersHandler))).Methods("Delete")
 
 	//handler photo
 	photoHandler := controller.NewPhoto(db)
-	route.Handle("/photos", middleware.AuthCekToken(http.HandlerFunc(photoHandler.Photo))).Methods("GET")
-	route.HandleFunc("/photos/{id}", photoHandler.Photo)
+	route.Handle("/photos", middleware.Auth(http.HandlerFunc(photoHandler.Photo))).Methods("GET")
 
 	//handler comment
 	commentHandler := controller.NewComment(db)
-	route.Handle("/comments", middleware.AuthCekToken(http.HandlerFunc(commentHandler.Comment))).Methods("GET")
-	route.HandleFunc("/comments/{id}", commentHandler.Comment)
+	route.Handle("/comments", middleware.Auth(http.HandlerFunc(commentHandler.Comment))).Methods("GET")
 
 	//handler comment
 	sosialmediaHandler := controller.NewSosialMedia(db)
-	route.Handle("/sosialmedia", middleware.AuthCekToken(http.HandlerFunc(sosialmediaHandler.SosialMedia))).Methods("GET")
-	route.HandleFunc("/sosialmedia/{id}", sosialmediaHandler.SosialMedia)
+	route.Handle("/sosialmedia", middleware.Auth(http.HandlerFunc(sosialmediaHandler.SosialMedia))).Methods("GET")
 
 	fmt.Println("Now listening on port 0.0.0.0" + PORT)
 	srv := &http.Server{
