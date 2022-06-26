@@ -40,7 +40,7 @@ func (ch *CommentHand) Comment(w http.ResponseWriter, r *http.Request) {
 	case http.MethodGet:
 		fmt.Println("Get Comments")
 		sqlQuery := `
-		select c.id, c.caption,c.photo_id,c.user_id,c.updatedat,c.createdat,
+		select c.id, c.caption,c.photo_id,c.user_id,c.updated_at,c.created_at,
    		u.id,u.email,u.username,p.id,p.title,p.caption,p.photo_url,p.user_id 
     	from comment c left join public.photo p on c.photo_id = p.id 
     	left join users u on c.user_id = u.id`
@@ -73,7 +73,7 @@ func (ch *CommentHand) Comment(w http.ResponseWriter, r *http.Request) {
 			w.Write([]byte(fmt.Sprint(err)))
 		} else {
 			sqlStament := `Insert into public.comment
-			(user_id,photo_id,message,createdat,updatedat)
+			(user_id,photo_id,message,created_at,updated_at)
 			values ($1,$2,$3,$4,$4) Returning id`
 			// intId, err := strconv.Atoi(id)
 			err = ch.db.QueryRow(sqlStament,
