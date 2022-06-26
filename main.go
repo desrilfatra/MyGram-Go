@@ -56,6 +56,11 @@ func main() {
 	route.HandleFunc("/photos", photoHandler.Photo)
 	route.HandleFunc("/photos/{id}", photoHandler.Photo)
 
+	//handler comment
+	commentHandler := controller.NewComment(db)
+	route.HandleFunc("/comments", commentHandler.Comment)
+	route.HandleFunc("/comments/{id}", commentHandler.Comment)
+
 	fmt.Println("Now listening on port 0.0.0.0" + PORT)
 	srv := &http.Server{
 		Handler:      route,
