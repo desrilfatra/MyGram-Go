@@ -50,8 +50,8 @@ func (h *RegisterHandler) Register(w http.ResponseWriter, r *http.Request) {
 		newUser.CreatedAt = time.Now()
 		newUser.UpdatedAt = time.Now()
 		sqlQuery := `INSERT INTO public.users
-	(username,email,password,age,createdat,updatedat)
-	values ($1,$2,$3,$4,$5,$6) Returning id` //sesuai dengan nama table
+	(username,email,password,age,created_at,updated_at)
+	values ($1,$2,$3,$4,$5,$6) Returning id`
 		fmt.Println("tess")
 		err = h.db.QueryRow(sqlQuery,
 			newUser.Username,
@@ -165,7 +165,7 @@ func (h *UsersHandler) Updateusr(w http.ResponseWriter, r *http.Request, id stri
 
 		newUser.UpdatedAt = time.Now()
 		sqlQuery := `
-		UPDATE public.users set email = $1, username= $2, updatedat = $3 
+		UPDATE public.users set email = $1, username= $2, updated_at = $3 
 		where id = $4`
 
 		res, err := h.db.Exec(sqlQuery,
