@@ -97,5 +97,43 @@ func (sm *SosialMediaHand) SosialMedia(w http.ResponseWriter, r *http.Request) {
 			w.Write(jsonData)
 		}
 
+	case http.MethodPut:
+		fmt.Println("PUT")
+		if id != "" {
+			var newSocialMedia entity.SocialMedia
+			json.NewDecoder(r.Body).Decode(&newSocialMedia)
+			err := sosialmediaser.CekPostSocialMedia(newSocialMedia.Name, newSocialMedia.Social_Media_Url)
+			if err != nil {
+				w.Write([]byte(fmt.Sprint(err)))
+			} else {
+				sqlQuery := `update public.socialmedia set name = $1, social_media_url = $2 where id = $3`
+				//query.scan
+				_, err = sm.db.Exec(sqlQuery,
+					newSocialMedia.Name,
+					newSocialMedia.Social_Media_Url,
+					id,
+				)
+				if err != nil {
+					fmt.Println("error update")
+					w.Write([]byte(fmt.Sprint(err)))
+				}
+				response := entity.ResponsePutSocialMedia{}
+				sqlQuery1 := `select s.id,s.name, s.social_media_url, s.userid, u.updated_at 
+				from public.socialmedia s left join public.users u on s.userid = u.id where s.id = $1`
+				err = sm.db.QueryRow(sqlQuery1, id).
+					Scan(&response.Id, &response.Name, &response.Social_Media_Url, &response.User_id, &response.UpdatedAt)
+				// count, err := res.RowsAffected()
+				if err != nil {
+					w.Write([]byte(fmt.Sprint(err)))
+				}
+				jsonData, _ := json.Marshal(&response)
+				w.Header().Add("Content-Type", "application/json")
+				w.WriteHeader(200)
+				w.Write(jsonData)
+			}
+
+		}
+
 	}
+
 }
