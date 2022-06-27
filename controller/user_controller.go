@@ -149,7 +149,7 @@ func UserLoginHandler(db *sql.DB) LoginHandlerIF {
 func (h *UsersHandler) Updateusr(w http.ResponseWriter, r *http.Request, id string) {
 	if id != "" {
 		ctx := r.Context()
-		user := middleware.ForUser(ctx)
+		user := middleware.RunUser(ctx)
 		fmt.Println(user)
 		fmt.Println(user.Id)
 		var newUser entity.User
@@ -209,7 +209,7 @@ func (h *UsersHandler) Updateusr(w http.ResponseWriter, r *http.Request, id stri
 
 func (h *UsersHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	user := middleware.ForUser(ctx)
+	user := middleware.RunUser(ctx)
 
 	fmt.Println(user)
 	fmt.Println(user.Id)
