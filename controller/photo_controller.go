@@ -3,6 +3,7 @@ package controller
 import (
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"mygram-go/entity"
 	"mygram-go/middleware"
@@ -106,8 +107,8 @@ func (ph *PhotoHand) Photo(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				w.Write([]byte(fmt.Sprint(err)))
 			} else {
-				sqlStament := `update public.photo set title = $1, caption = $2 , photo_url = $3, updated_at =$4 where id = $5`
-				_, err = ph.db.Exec(sqlStament,
+				sqlQuery := `update public.photo set title = $1, caption = $2 , photo_url = $3, updated_at =$4 where id = $5`
+				_, err = ph.db.Exec(sqlQuery,
 					newPhotos.Title,
 					newPhotos.Caption,
 					newPhotos.Url,
@@ -118,9 +119,10 @@ func (ph *PhotoHand) Photo(w http.ResponseWriter, r *http.Request) {
 					fmt.Println("error update")
 					w.Write([]byte(fmt.Sprint(err)))
 				}
-				sqlstatment2 := `select * from public.photo where id= $1`
-				err = ph.db.QueryRow(sqlstatment2, id).
-					Scan(&newPhotos.Id, &newPhotos.Title, &newPhotos.Caption, &newPhotos.Url, &newPhotos.User_id, &newPhotos.CreatedAt, &newPhotos.UpdatedAt)
+				sqlQuery1 := `select * from public.photo where id= $1`
+				err = ph.db.QueryRow(sqlQuery1, id).
+					Scan(&newPhotos.Id, &newPhotos.Title, &newPhotos.Caption, &newPhotos.Url,
+						&newPhotos.User_id, &newPhotos.CreatedAt, &newPhotos.UpdatedAt)
 				// count, err := res.RowsAffected()
 				if err != nil {
 					w.Write([]byte(fmt.Sprint(err)))
@@ -139,11 +141,35 @@ func (ph *PhotoHand) Photo(w http.ResponseWriter, r *http.Request) {
 				w.Header().Add("Content-Type", "application/json")
 				w.WriteHeader(200)
 				w.Write(jsonData)
-
 			}
-		}
 
+		} else {
+			err := errors.New("Photo not found")
+			w.Write([]byte(fmt.Sprint(err)))
+		}
+	case http.MethodDelete:
+		fmt.Println("DELETE")
+		if id != "" {
+
+			sqlQuery := `DELETE from public.photo where id = $1 and user_id = $2`
+			_, err := ph.db.Exec(sqlQuery, id, user.Id)
+
+			if err != nil {
+				w.Write([]byte(fmt.Sprint(err)))
+			}
+			message := entity.Message{
+				Message: "Your photo has been successfully deleted",
+			}
+			jsonData, _ := json.Marshal(&message)
+			w.Header().Add("Content-Type", "application/json")
+			w.WriteHeader(200)
+			w.Write(jsonData)
+		} else {
+			err := errors.New("id is empty")
+			w.Write([]byte(fmt.Sprint(err)))
+		}
 	}
+
 }
 
 type PhotoHandlerInterf interface {

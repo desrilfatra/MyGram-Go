@@ -57,6 +57,7 @@ func main() {
 	route.Handle("/photos", middleware.Auth(http.HandlerFunc(photoHandler.Photo))).Methods("GET")
 	route.Handle("/photos", middleware.Auth(http.HandlerFunc(photoHandler.Photo))).Methods("POST")
 	route.Handle("/photos/{id}", middleware.Auth(http.HandlerFunc(photoHandler.Photo))).Methods("PUT")
+	route.Handle("/photos/{id}", middleware.Auth(http.HandlerFunc(photoHandler.Photo))).Methods("DELETE")
 
 	//handler comment
 	commentHandler := controller.NewComment(db)
