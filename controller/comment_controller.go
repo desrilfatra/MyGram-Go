@@ -72,11 +72,11 @@ func (ch *CommentHand) Comment(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			w.Write([]byte(fmt.Sprint(err)))
 		} else {
-			sqlStament := `Insert into public.comment
+			sqlQuery := `Insert into public.comment
 			(user_id,photo_id,message,created_at,updated_at)
 			values ($1,$2,$3,$4,$4) Returning id`
 			// intId, err := strconv.Atoi(id)
-			err = ch.db.QueryRow(sqlStament,
+			err = ch.db.QueryRow(sqlQuery,
 				user.Id,
 				newComment.Photo_id,
 				newComment.Message,
@@ -99,6 +99,43 @@ func (ch *CommentHand) Comment(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(201)
 			w.Write(jsonData)
 
+		}
+
+	case http.MethodPut:
+		fmt.Println("PUT")
+		var newComment entity.Commment
+		json.NewDecoder(r.Body).Decode(&newComment)
+		err := commentservic.CekPostComment(newComment.Message)
+		if err != nil {
+			w.Write([]byte(fmt.Sprint(err)))
+		} else {
+			if id != "" {
+				sqlQuery := `update public.comment set message = $1, updated_at =$2 where id = $3`
+				//query.scan
+				_, err = ch.db.Exec(sqlQuery,
+					newComment.Message,
+					time.Now(),
+					id,
+				)
+				if err != nil {
+					fmt.Println("error update")
+					w.Write([]byte(fmt.Sprint(err)))
+				}
+				response := entity.ResponseUpdateComment{}
+				sqlQuery1 := `select c.id,p.title,p.caption,p.photo_url,c.user_id,c.updated_at 
+				from comment c left join photo p on c.photo_id = p.id where c.id= $1`
+				err = ch.db.QueryRow(sqlQuery1, id).
+					Scan(&response.Id, &response.Title, &response.Caption, &response.Url, &response.User_id, &response.UpdatedAt)
+				// count, err := res.RowsAffected()
+				if err != nil {
+					w.Write([]byte(fmt.Sprint(err)))
+				}
+				jsonData, _ := json.Marshal(&response)
+				w.Header().Add("Content-Type", "application/json")
+				w.WriteHeader(200)
+				w.Write(jsonData)
+
+			}
 		}
 	}
 }
