@@ -95,6 +95,54 @@ func (ph *PhotoHand) Photo(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(201)
 		}
 
+	case http.MethodPut:
+		fmt.Println("Put")
+		if id != "" {
+
+			var newPhotos entity.Photo
+			json.NewDecoder(r.Body).Decode(&newPhotos)
+			photoserv := service.NewPhotoService()
+			err := photoserv.CekPostPhoto(newPhotos.Title, newPhotos.Url)
+			if err != nil {
+				w.Write([]byte(fmt.Sprint(err)))
+			} else {
+				sqlStament := `update public.photo set title = $1, caption = $2 , photo_url = $3, updated_at =$4 where id = $5`
+				_, err = ph.db.Exec(sqlStament,
+					newPhotos.Title,
+					newPhotos.Caption,
+					newPhotos.Url,
+					time.Now(),
+					id,
+				)
+				if err != nil {
+					fmt.Println("error update")
+					w.Write([]byte(fmt.Sprint(err)))
+				}
+				sqlstatment2 := `select * from public.photo where id= $1`
+				err = ph.db.QueryRow(sqlstatment2, id).
+					Scan(&newPhotos.Id, &newPhotos.Title, &newPhotos.Caption, &newPhotos.Url, &newPhotos.User_id, &newPhotos.CreatedAt, &newPhotos.UpdatedAt)
+				// count, err := res.RowsAffected()
+				if err != nil {
+					w.Write([]byte(fmt.Sprint(err)))
+				}
+
+				response := entity.ResponsePutPhoto{
+					Id:        newPhotos.Id,
+					Title:     newPhotos.Title,
+					Caption:   newPhotos.Caption,
+					Url:       newPhotos.Url,
+					User_id:   newPhotos.User_id,
+					UpdatedAt: newPhotos.UpdatedAt,
+				}
+
+				jsonData, _ := json.Marshal(&response)
+				w.Header().Add("Content-Type", "application/json")
+				w.WriteHeader(200)
+				w.Write(jsonData)
+
+			}
+		}
+
 	}
 }
 
