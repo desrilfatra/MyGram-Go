@@ -149,7 +149,7 @@ func (ch *CommentHand) Comment(w http.ResponseWriter, r *http.Request) {
 				w.Write([]byte(fmt.Sprint(err)))
 			}
 			message := entity.Message{
-				Message: "Your photo has been successfully deleted",
+				Message: "Your comment has been successfully deleted",
 			}
 			jsonData, _ := json.Marshal(&message)
 			w.Header().Add("Content-Type", "application/json")
