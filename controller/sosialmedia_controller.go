@@ -3,6 +3,7 @@ package controller
 import (
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"mygram-go/entity"
 	"mygram-go/middleware"
@@ -132,6 +133,28 @@ func (sm *SosialMediaHand) SosialMedia(w http.ResponseWriter, r *http.Request) {
 				w.Write(jsonData)
 			}
 
+		}
+
+	case http.MethodDelete:
+		fmt.Println("DELETE")
+		if id != "" {
+
+			sqlQuery := `DELETE from public.socialmedia where id = $1 and userid = $2`
+			_, err := sm.db.Exec(sqlQuery, id, user.Id)
+
+			if err != nil {
+				w.Write([]byte(fmt.Sprint(err)))
+			}
+			message := entity.Message{
+				Message: "Your socialmedia has been successfully deleted",
+			}
+			jsonData, _ := json.Marshal(&message)
+			w.Header().Add("Content-Type", "application/json")
+			w.WriteHeader(200)
+			w.Write(jsonData)
+		} else {
+			err := errors.New("id is empty")
+			w.Write([]byte(fmt.Sprint(err)))
 		}
 
 	}
