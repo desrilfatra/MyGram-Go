@@ -64,6 +64,7 @@ func main() {
 	route.Handle("/comments", middleware.Auth(http.HandlerFunc(commentHandler.Comment))).Methods("GET")
 	route.Handle("/comments", middleware.Auth(http.HandlerFunc(commentHandler.Comment))).Methods("POST")
 	route.Handle("/comments/{id}", middleware.Auth(http.HandlerFunc(commentHandler.Comment))).Methods("PUT")
+	route.Handle("/comments/{id}", middleware.Auth(http.HandlerFunc(commentHandler.Comment))).Methods("DELETE")
 
 	//handler comment
 	sosialmediaHandler := controller.NewSosialMedia(db)

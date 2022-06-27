@@ -3,6 +3,7 @@ package controller
 import (
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"mygram-go/entity"
 	"mygram-go/middleware"
@@ -136,6 +137,27 @@ func (ch *CommentHand) Comment(w http.ResponseWriter, r *http.Request) {
 				w.Write(jsonData)
 
 			}
+		}
+	case http.MethodDelete:
+		fmt.Println("DELETE")
+		if id != "" {
+
+			sqlQuery := `DELETE from public.comment where id = $1 and user_id = $2`
+			_, err := ch.db.Exec(sqlQuery, id, user.Id)
+
+			if err != nil {
+				w.Write([]byte(fmt.Sprint(err)))
+			}
+			message := entity.Message{
+				Message: "Your photo has been successfully deleted",
+			}
+			jsonData, _ := json.Marshal(&message)
+			w.Header().Add("Content-Type", "application/json")
+			w.WriteHeader(200)
+			w.Write(jsonData)
+		} else {
+			err := errors.New("id is empty")
+			w.Write([]byte(fmt.Sprint(err)))
 		}
 	}
 }
