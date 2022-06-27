@@ -31,7 +31,7 @@ func (ch *CommentHand) Comment(w http.ResponseWriter, r *http.Request) {
 	id := params["id"]
 	fmt.Println(id)
 	ctx := r.Context()
-	user := middleware.ForUser(ctx)
+	user := middleware.RunUser(ctx)
 
 	fmt.Println(user)
 	fmt.Println(user.Id)

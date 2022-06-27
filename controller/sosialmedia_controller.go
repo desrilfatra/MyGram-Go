@@ -31,7 +31,7 @@ func (sm *SosialMediaHand) SosialMedia(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(id)
 
 	ctx := r.Context()
-	user := middleware.ForUser(ctx)
+	user := middleware.RunUser(ctx)
 
 	fmt.Println(user)
 	fmt.Println(user.Id)
