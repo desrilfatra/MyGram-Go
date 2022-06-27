@@ -38,7 +38,7 @@ func Auth(next http.Handler) http.Handler {
 	})
 }
 
-func RunUser(ctx context.Context) *entity.User {
+func RunUser(tx context.Context) *entity.User {
 	rawData, _ := ctx.Value(tempKey).(*entity.User)
 	return rawData
 }
