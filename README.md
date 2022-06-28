@@ -22,7 +22,6 @@ Final Project Scalable Web Service with Golang Hacktiv8
             response
             ```json
             {
-                "status": "created",
                 "data": {
                     "id": 1,
                     "age": 21,
