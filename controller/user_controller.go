@@ -97,10 +97,12 @@ func (h *LoginHandler) Login(w http.ResponseWriter, r *http.Request) {
 
 		// newUser.Password = string(hashedPassword)
 		// fmt.Println(newUser.Password)
-		sqlQuery := `select * from public.users where email = $1`
+		sqlQuery := `select u.id, u.username, u.email, u.password, u.age,
+				u.created_at, u.updated_at from public.users as u where email = $1`
 
 		err = h.db.QueryRow(sqlQuery, newUser.Email).
-			Scan(&newUser.Id, &newUser.Username, &newUser.Email, &newUser.Password, &newUser.Age, &newUser.CreatedAt, &newUser.UpdatedAt)
+			Scan(&newUser.Id, &newUser.Username, &newUser.Email, &newUser.Password,
+				&newUser.Age, &newUser.CreatedAt, &newUser.UpdatedAt)
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -180,7 +182,8 @@ func (h *UsersHandler) Updateusr(w http.ResponseWriter, r *http.Request, id stri
 			w.Write([]byte(fmt.Sprint(err)))
 
 		}
-		sqlQuery1 := `select * from public.users where id= $1`
+		sqlQuery1 := `select u.id, u.username, u.email, u.password, u.age,
+		u.created_at, u.updated_at from public.users as u  where id= $1`
 		err = h.db.QueryRow(sqlQuery1, id).
 			Scan(&newUser.Id, &newUser.Username, &newUser.Email, &newUser.Password,
 				&newUser.Age, &newUser.CreatedAt, &newUser.UpdatedAt)

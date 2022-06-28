@@ -107,7 +107,7 @@ func (ph *PhotoHand) Photo(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				w.Write([]byte(fmt.Sprint(err)))
 			} else {
-				sqlQuery := `update public.photo set title = $1, caption = $2 , photo_url = $3, updated_at =$4 where id = $5`
+				sqlQuery := `update public.photo set title = $1, caption = $2 , photo_url = $3, updated_at = $4 where id = $5`
 				_, err = ph.db.Exec(sqlQuery,
 					newPhotos.Title,
 					newPhotos.Caption,
@@ -119,7 +119,8 @@ func (ph *PhotoHand) Photo(w http.ResponseWriter, r *http.Request) {
 					fmt.Println("error update")
 					w.Write([]byte(fmt.Sprint(err)))
 				}
-				sqlQuery1 := `select * from public.photo where id= $1`
+				sqlQuery1 := `select p.id, p.title, p.caption, p.photo_url, p.user_id, p.created_at,
+				p.updated_at  from public.photo as p where p.id= $1`
 				err = ph.db.QueryRow(sqlQuery1, id).
 					Scan(&newPhotos.Id, &newPhotos.Title, &newPhotos.Caption, &newPhotos.Url,
 						&newPhotos.User_id, &newPhotos.CreatedAt, &newPhotos.UpdatedAt)
