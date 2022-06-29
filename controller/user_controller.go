@@ -3,6 +3,7 @@ package controller
 import (
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"mygram-go/entity"
 	"mygram-go/middleware"
@@ -74,7 +75,7 @@ type LoginHandler struct {
 func (h *LoginHandler) Login(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
 		var newUser entity.User
-		var validate *entity.User
+		var validatelogin *entity.User
 
 		json.NewDecoder(r.Body).Decode(&newUser)
 		fmt.Println(r.Body)
@@ -84,35 +85,29 @@ func (h *LoginHandler) Login(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			panic(err)
 		}
-		validate = &newUser
+		validatelogin = &newUser
 		serv := service.NewUserService()
 
-		// newUser.Password = string(hashedPassword)
-		// fmt.Println(newUser.Password)
-		sqlQuery := `select u.id, u.username, u.email, u.password, u.age,
-				u.created_at, u.updated_at from public.users as u where email = $1`
+		newUser, err = repository.UserLoginRepository(h.db, newUser)
+		if err != nil {
+			w.Write([]byte(fmt.Sprint(errors.New("email tidak terdaftar"))))
 
-		err = h.db.QueryRow(sqlQuery, newUser.Email).
-			Scan(&newUser.Id, &newUser.Username, &newUser.Email, &newUser.Password,
-				&newUser.Age, &newUser.CreatedAt, &newUser.UpdatedAt)
-		if err != nil {
-			fmt.Println(err)
-		}
-		fmt.Println(newUser)
-		validate, err = serv.Login(validate, tempPassword)
-		if err != nil {
-			fmt.Println(err)
-			w.Write([]byte(fmt.Sprint(err)))
 		} else {
-			var token entity.Tokens
-			token.TokenJwt = serv.GetToken(uint(newUser.Id), newUser.Email, newUser.Password)
-			jsonData, _ := json.Marshal(&token)
-			w.Header().Add("Content-Type", "application/json")
-			w.Write(jsonData)
-		}
+			fmt.Println(newUser)
+			validatelogin, err = serv.Login(validatelogin, tempPassword)
+			if err != nil {
+				fmt.Println(err)
+				w.Write([]byte(fmt.Sprint(err)))
 
-	} else {
-		fmt.Println("ERORRRR")
+			} else {
+				var token entity.Tokens
+				token.TokenJwt = serv.GetToken(uint(newUser.Id), newUser.Email, newUser.Password)
+				jsonData, _ := json.Marshal(&token)
+				w.Header().Add("Content-Type", "application/json")
+				w.WriteHeader(200)
+				w.Write(jsonData)
+			}
+		}
 	}
 }
 

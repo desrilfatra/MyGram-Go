@@ -2,6 +2,7 @@ package repository
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"mygram-go/entity"
 	"time"
@@ -38,5 +39,16 @@ func UserRegisterRepository(db *sql.DB, newUser entity.User) entity.ResponseRegi
 		}
 		return response_Register
 	}
+}
 
+func UserLoginRepository(db *sql.DB, user entity.User) (entity.User, error) {
+	sqlQuery := `select u.id, u.username, u.email, u.password, u.age,
+				u.created_at, u.updated_at from public.users as u  where email= $1`
+	err = db.QueryRow(sqlQuery, user.Email).
+		Scan(&user.Id, &user.Username, &user.Email, &user.Password,
+			&user.Age, &user.CreatedAt, &user.UpdatedAt)
+	if err != nil {
+		return entity.User{}, errors.New("username cannot be empty")
+	}
+	return user, nil
 }
