@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"mygram-go/entity"
 	"mygram-go/middleware"
+	"mygram-go/repository"
 	"mygram-go/service"
 	"net/http"
 
@@ -41,26 +42,7 @@ func (sm *SosialMediaHand) SosialMedia(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
 		fmt.Println("Get Social Media")
-		sqlQuery := `
-		select distinct on (sm.id) sm.id, sm.name, sm.sosial_media_url, sm.userid,
-   		 u.createdat, u.updatedat, u.id, u.username, p.photo_url 
-   		 from public.sosialmedia sm left join public.users u on sm.userid = u.id
-   		 left join public.photo p on u.id = p.user_id  `
-		rows, err := sm.db.Query(sqlQuery)
-		if err != nil {
-			fmt.Println(err)
-		}
-		defer rows.Close()
-		socialmedias := []*entity.ResponseGetSocialMedia{}
-		for rows.Next() {
-			var socialmedia entity.ResponseGetSocialMedia
-			if serr := rows.Scan(&socialmedia.Id, &socialmedia.Name, &socialmedia.Social_Media_Url, &socialmedia.User_id,
-				&socialmedia.CreatedAt, &socialmedia.UpdatedAt, &socialmedia.User.Id, &socialmedia.User.Username,
-				&socialmedia.User.Url); serr != nil {
-				fmt.Println("Scan error", serr)
-			}
-			socialmedias = append(socialmedias, &socialmedia)
-		}
+		socialmedias := repository.SocmedGetRepo(sm.db)
 		jsonData, _ := json.Marshal(&socialmedias)
 		w.Header().Add("Content-Type", "application/json")
 		w.WriteHeader(200)
@@ -74,24 +56,9 @@ func (sm *SosialMediaHand) SosialMedia(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			w.Write([]byte(fmt.Sprint(err)))
 		} else {
-			sqlQuery := `insert into public.socialmedia
-			(name,social_media_url,userid)
-			values ($1,$2,$3) Returning id`
-			// intId, err := strconv.Atoi(id)
-			err = sm.db.QueryRow(sqlQuery, newSocialMedia.Name, newSocialMedia.Social_Media_Url, user.Id).Scan(&newSocialMedia.Id)
-			if err != nil {
-				fmt.Println(err)
-			}
 
-			response := entity.ResponsePostSocialMedia{}
-			sqlQuery1 := `select s.id,s.name,s.social_media_url,s.userid,u.created_at 
-			from public.socialmedia s left join public.users u on s.userid = u.id where s.id = $1`
-			err = sm.db.QueryRow(sqlQuery1, newSocialMedia.Id).Scan(&response.Id, &response.Name,
-				&response.Social_Media_Url, &response.User_id, &response.CreatedAt)
-			if err != nil {
-				w.Write([]byte(fmt.Sprint(err)))
-			}
-
+			user_id := user.Id
+			response := repository.SocmedPostRepo(sm.db, newSocialMedia, user_id)
 			jsonData, _ := json.Marshal(&response)
 			w.Header().Add("Content-Type", "application/json")
 			w.WriteHeader(201)
@@ -107,26 +74,7 @@ func (sm *SosialMediaHand) SosialMedia(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				w.Write([]byte(fmt.Sprint(err)))
 			} else {
-				sqlQuery := `update public.socialmedia set name = $1, social_media_url = $2 where id = $3`
-				//query.scan
-				_, err = sm.db.Exec(sqlQuery,
-					newSocialMedia.Name,
-					newSocialMedia.Social_Media_Url,
-					id,
-				)
-				if err != nil {
-					fmt.Println("error update")
-					w.Write([]byte(fmt.Sprint(err)))
-				}
-				response := entity.ResponsePutSocialMedia{}
-				sqlQuery1 := `select s.id,s.name, s.social_media_url, s.userid, u.updated_at 
-				from public.socialmedia s left join public.users u on s.userid = u.id where s.id = $1`
-				err = sm.db.QueryRow(sqlQuery1, id).
-					Scan(&response.Id, &response.Name, &response.Social_Media_Url, &response.User_id, &response.UpdatedAt)
-				// count, err := res.RowsAffected()
-				if err != nil {
-					w.Write([]byte(fmt.Sprint(err)))
-				}
+				response := repository.SocmedPutRepo(sm.db, newSocialMedia, id)
 				jsonData, _ := json.Marshal(&response)
 				w.Header().Add("Content-Type", "application/json")
 				w.WriteHeader(200)
@@ -138,16 +86,7 @@ func (sm *SosialMediaHand) SosialMedia(w http.ResponseWriter, r *http.Request) {
 	case http.MethodDelete:
 		fmt.Println("DELETE")
 		if id != "" {
-
-			sqlQuery := `DELETE from public.socialmedia where id = $1 and userid = $2`
-			_, err := sm.db.Exec(sqlQuery, id, user.Id)
-
-			if err != nil {
-				w.Write([]byte(fmt.Sprint(err)))
-			}
-			message := entity.Message{
-				Message: "Your socialmedia has been successfully deleted",
-			}
+			message := repository.SocmedDelRepo(sm.db, id)
 			jsonData, _ := json.Marshal(&message)
 			w.Header().Add("Content-Type", "application/json")
 			w.WriteHeader(200)
