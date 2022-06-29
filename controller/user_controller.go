@@ -10,7 +10,6 @@ import (
 	"mygram-go/repository"
 	"mygram-go/service"
 	"net/http"
-	"time"
 
 	"github.com/gorilla/mux"
 	"golang.org/x/crypto/bcrypt"
@@ -27,7 +26,7 @@ func (h *UsersHandler) UsersHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case http.MethodPut:
-		h.Updateusr(w, r, id)
+		h.Update(w, r, id)
 	case http.MethodDelete:
 		h.Delete(w, r)
 	}
@@ -135,10 +134,11 @@ func UserLoginHandler(db *sql.DB) LoginHandlerIF {
 	return &LoginHandler{db: db}
 }
 
-func (h *UsersHandler) Updateusr(w http.ResponseWriter, r *http.Request, id string) {
+func (h *UsersHandler) Update(w http.ResponseWriter, r *http.Request, id string) {
 	if id != "" {
 		ctx := r.Context()
 		user := middleware.RunUser(ctx)
+
 		fmt.Println(user)
 		fmt.Println(user.Id)
 		var newUser entity.User
@@ -151,49 +151,13 @@ func (h *UsersHandler) Updateusr(w http.ResponseWriter, r *http.Request, id stri
 		if err != nil {
 			fmt.Println(err)
 		}
-
-		newUser.UpdatedAt = time.Now()
-		sqlQuery := `
-		UPDATE public.users set email = $1, username= $2, updated_at = $3 
-		where id = $4`
-
-		res, err := h.db.Exec(sqlQuery,
-			newUser.Email,
-			newUser.Username,
-			newUser.UpdatedAt,
-			id,
-		)
-		fmt.Println(res)
-		if err != nil {
-			fmt.Println("error update")
-			w.Write([]byte(fmt.Sprint(err)))
-
-		}
-		sqlQuery1 := `select u.id, u.username, u.email, u.password, u.age,
-		u.created_at, u.updated_at from public.users as u  where id= $1`
-		err = h.db.QueryRow(sqlQuery1, id).
-			Scan(&newUser.Id, &newUser.Username, &newUser.Email, &newUser.Password,
-				&newUser.Age, &newUser.CreatedAt, &newUser.UpdatedAt)
-		// count, err := res.RowsAffected()
-		if err != nil {
-			w.Write([]byte(fmt.Sprint(err)))
-
-		}
-
-		fmt.Println(newUser)
-		newUser.UpdatedAt = time.Now()
-		responseUpdateUser := entity.ResponseUpdate{
-			Id:        newUser.Id,
-			Email:     newUser.Email,
-			Username:  newUser.Username,
-			Age:       newUser.Age,
-			UpdatedAt: newUser.UpdatedAt,
-		}
+		responseUpdateUser := repository.UserPutRepository(h.db, newUser, id)
 		jsonData, _ := json.Marshal(&responseUpdateUser)
 		w.Header().Add("Content-Type", "application/json")
 		w.WriteHeader(200)
 		w.Write(jsonData)
 		return
+
 	}
 }
 

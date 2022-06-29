@@ -52,3 +52,42 @@ func UserLoginRepository(db *sql.DB, user entity.User) (entity.User, error) {
 	}
 	return user, nil
 }
+
+func UserPutRepository(db *sql.DB, NewUser entity.User, id string) entity.ResponseUpdate {
+
+	sqlQuery := `
+		UPDATE public.users set username = $1, email= $2, updated_at = $3 
+		where id = $4`
+
+	_, err := db.Exec(sqlQuery,
+		NewUser.Username,
+		NewUser.Email,
+		time.Now(),
+		id,
+	)
+	if err != nil {
+		fmt.Println("error update")
+		panic(err)
+
+	}
+	sqlQuery1 := `select u.id, u.username, u.email, u.password, u.age,
+		u.created_at, u.updated_at from public.users as u  where id= $1`
+	err = db.QueryRow(sqlQuery1, id).
+		Scan(&NewUser.Id, &NewUser.Username, &NewUser.Email, &NewUser.Password,
+			&NewUser.Age, &NewUser.CreatedAt, &NewUser.UpdatedAt)
+
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(NewUser)
+
+	responseUpdateUser := entity.ResponseUpdate{
+		Id:        NewUser.Id,
+		Email:     NewUser.Email,
+		Username:  NewUser.Username,
+		Age:       NewUser.Age,
+		UpdatedAt: time.Now(),
+	}
+	return responseUpdateUser
+}
