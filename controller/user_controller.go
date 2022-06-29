@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"mygram-go/entity"
 	"mygram-go/middleware"
+	"mygram-go/repository"
 	"mygram-go/service"
 	"net/http"
 	"time"
@@ -39,38 +40,29 @@ type RegisterHandler struct {
 func (h *RegisterHandler) Register(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
 		var newUser entity.User
+		var validate *entity.User
 		json.NewDecoder(r.Body).Decode(&newUser)
 		newPassword := []byte(newUser.Password)
 		hashedPassword, err := bcrypt.GenerateFromPassword(newPassword, bcrypt.DefaultCost)
 		if err != nil {
 			panic(err)
 		}
-		newUser.Password = string(hashedPassword)
+		validate = &newUser
+		serv := service.NewUserService()
+		validate, err = serv.Register(validate)
+		if err != nil {
+			w.Write([]byte(fmt.Sprint(err)))
 
-		newUser.CreatedAt = time.Now()
-		newUser.UpdatedAt = time.Now()
-		sqlQuery := `INSERT INTO public.users
-	(username,email,password,age,created_at,updated_at)
-	values ($1,$2,$3,$4,$5,$6) Returning id`
-		fmt.Println("tess")
-		err = h.db.QueryRow(sqlQuery,
-			newUser.Username,
-			newUser.Email,
-			newUser.Password,
-			newUser.Age,
-			newUser.CreatedAt,
-			newUser.UpdatedAt,
-		).Scan(&newUser.Id)
-		fmt.Println(newUser.Id)
-		response_Register := entity.ResponseRegister{
-			Age:      newUser.Age,
-			Email:    newUser.Email,
-			Id:       newUser.Id,
-			Username: newUser.Username,
+		} else {
+			// newUser.Password = string(newPassword)
+			// fmt.Println(newUser.Password)
+			newUser.Password = string(hashedPassword)
+			response_Register := repository.UserRegisterRepository(h.db, newUser)
+			jsonData, _ := json.Marshal(&response_Register)
+			w.Header().Add("Content-Type", "application/json")
+			w.WriteHeader(201)
+			w.Write(jsonData)
 		}
-		jsonData, _ := json.Marshal(&response_Register)
-		w.Header().Add("Content-Type", "application/json")
-		w.Write(jsonData)
 	}
 }
 
