@@ -168,19 +168,10 @@ func (h *UsersHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(user)
 	fmt.Println(user.Id)
 	// if temp_id != nil{}
-	sqlstament := `DELETE from public.users where id = $1`
-	_, err := h.db.Exec(sqlstament, user.Id)
 
-	if err != nil {
-		w.Write([]byte(fmt.Sprint(err)))
-
-	}
-	message := entity.Message{
-		Message: "Your account has been successfully deleted",
-	}
+	message := repository.UserDeleteRepository(h.db, user)
 	jsonData, _ := json.Marshal(&message)
-	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(200)
+	w.Header().Add("Content-Type", "application/json")
 	w.Write(jsonData)
-
 }

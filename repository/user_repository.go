@@ -91,3 +91,15 @@ func UserPutRepository(db *sql.DB, NewUser entity.User, id string) entity.Respon
 	}
 	return responseUpdateUser
 }
+
+func UserDeleteRepository(db *sql.DB, newUser *entity.User) entity.Message {
+	sqlQuery := `DELETE FROM public.users where id = $1`
+	_, err := db.Exec(sqlQuery, newUser.Id)
+	if err != nil {
+		panic(err)
+	}
+	responseDel := entity.Message{
+		Message: "Your account has been successfully deleted",
+	}
+	return responseDel
+}

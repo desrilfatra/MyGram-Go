@@ -50,7 +50,7 @@ func main() {
 	route.HandleFunc("/users/register", registerHandler.Register)
 	route.HandleFunc("/users/login", loginHandler.Login)
 	route.Handle("/users/{id}", middleware.Auth(http.HandlerFunc(usersHandler.UsersHandler))).Methods("PUT")
-	route.Handle("/users", middleware.Auth(http.HandlerFunc(usersHandler.UsersHandler))).Methods("Delete")
+	route.Handle("/users", middleware.Auth(http.HandlerFunc(usersHandler.UsersHandler))).Methods("DELETE")
 
 	//handler photo
 	photoHandler := controller.NewPhoto(db)
