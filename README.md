@@ -54,7 +54,7 @@ Final Project Scalable Web Service with Golang Hacktiv8
             }
             ```
             
-       * #### Upate User
+       * #### Update User
             [PUT]```http://localhost:8080/users/1```
             
             Authorization :
