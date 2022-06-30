@@ -3,12 +3,13 @@ package controller
 import (
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"mygram-go/entity"
 	"mygram-go/middleware"
+	"mygram-go/repository"
 	"mygram-go/service"
 	"net/http"
-	"time"
 
 	"github.com/gorilla/mux"
 	"golang.org/x/crypto/bcrypt"
@@ -25,7 +26,7 @@ func (h *UsersHandler) UsersHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case http.MethodPut:
-		h.Updateusr(w, r, id)
+		h.Update(w, r, id)
 	case http.MethodDelete:
 		h.Delete(w, r)
 	}
@@ -39,38 +40,29 @@ type RegisterHandler struct {
 func (h *RegisterHandler) Register(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
 		var newUser entity.User
+		var validate *entity.User
 		json.NewDecoder(r.Body).Decode(&newUser)
 		newPassword := []byte(newUser.Password)
 		hashedPassword, err := bcrypt.GenerateFromPassword(newPassword, bcrypt.DefaultCost)
 		if err != nil {
 			panic(err)
 		}
-		newUser.Password = string(hashedPassword)
+		validate = &newUser
+		serv := service.NewUserService()
+		validate, err = serv.Register(validate)
+		if err != nil {
+			w.Write([]byte(fmt.Sprint(err)))
 
-		newUser.CreatedAt = time.Now()
-		newUser.UpdatedAt = time.Now()
-		sqlQuery := `INSERT INTO public.users
-	(username,email,password,age,created_at,updated_at)
-	values ($1,$2,$3,$4,$5,$6) Returning id`
-		fmt.Println("tess")
-		err = h.db.QueryRow(sqlQuery,
-			newUser.Username,
-			newUser.Email,
-			newUser.Password,
-			newUser.Age,
-			newUser.CreatedAt,
-			newUser.UpdatedAt,
-		).Scan(&newUser.Id)
-		fmt.Println(newUser.Id)
-		response_Register := entity.ResponseRegister{
-			Age:      newUser.Age,
-			Email:    newUser.Email,
-			Id:       newUser.Id,
-			Username: newUser.Username,
+		} else {
+			// newUser.Password = string(newPassword)
+			// fmt.Println(newUser.Password)
+			newUser.Password = string(hashedPassword)
+			response_Register := repository.UserRegisterRepository(h.db, newUser)
+			jsonData, _ := json.Marshal(&response_Register)
+			w.Header().Add("Content-Type", "application/json")
+			w.WriteHeader(201)
+			w.Write(jsonData)
 		}
-		jsonData, _ := json.Marshal(&response_Register)
-		w.Header().Add("Content-Type", "application/json")
-		w.Write(jsonData)
 	}
 }
 
@@ -82,7 +74,7 @@ type LoginHandler struct {
 func (h *LoginHandler) Login(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
 		var newUser entity.User
-		var validate *entity.User
+		var validatelogin *entity.User
 
 		json.NewDecoder(r.Body).Decode(&newUser)
 		fmt.Println(r.Body)
@@ -92,33 +84,29 @@ func (h *LoginHandler) Login(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			panic(err)
 		}
-		validate = &newUser
+		validatelogin = &newUser
 		serv := service.NewUserService()
 
-		// newUser.Password = string(hashedPassword)
-		// fmt.Println(newUser.Password)
-		sqlQuery := `select * from public.users where email = $1`
+		newUser, err = repository.UserLoginRepository(h.db, newUser)
+		if err != nil {
+			w.Write([]byte(fmt.Sprint(errors.New("email tidak terdaftar"))))
 
-		err = h.db.QueryRow(sqlQuery, newUser.Email).
-			Scan(&newUser.Id, &newUser.Username, &newUser.Email, &newUser.Password, &newUser.Age, &newUser.CreatedAt, &newUser.UpdatedAt)
-		if err != nil {
-			fmt.Println(err)
-		}
-		fmt.Println(newUser)
-		validate, err = serv.Login(validate, tempPassword)
-		if err != nil {
-			fmt.Println(err)
-			w.Write([]byte(fmt.Sprint(err)))
 		} else {
-			var token entity.Tokens
-			token.TokenJwt = serv.GetToken(uint(newUser.Id), newUser.Email, newUser.Password)
-			jsonData, _ := json.Marshal(&token)
-			w.Header().Add("Content-Type", "application/json")
-			w.Write(jsonData)
-		}
+			fmt.Println(newUser)
+			validatelogin, err = serv.Login(validatelogin, tempPassword)
+			if err != nil {
+				fmt.Println(err)
+				w.Write([]byte(fmt.Sprint(err)))
 
-	} else {
-		fmt.Println("ERORRRR")
+			} else {
+				var token entity.Tokens
+				token.TokenJwt = serv.GetToken(uint(newUser.Id), newUser.Email, newUser.Password)
+				jsonData, _ := json.Marshal(&token)
+				w.Header().Add("Content-Type", "application/json")
+				w.WriteHeader(200)
+				w.Write(jsonData)
+			}
+		}
 	}
 }
 
@@ -146,10 +134,11 @@ func UserLoginHandler(db *sql.DB) LoginHandlerIF {
 	return &LoginHandler{db: db}
 }
 
-func (h *UsersHandler) Updateusr(w http.ResponseWriter, r *http.Request, id string) {
+func (h *UsersHandler) Update(w http.ResponseWriter, r *http.Request, id string) {
 	if id != "" {
 		ctx := r.Context()
 		user := middleware.RunUser(ctx)
+
 		fmt.Println(user)
 		fmt.Println(user.Id)
 		var newUser entity.User
@@ -162,48 +151,13 @@ func (h *UsersHandler) Updateusr(w http.ResponseWriter, r *http.Request, id stri
 		if err != nil {
 			fmt.Println(err)
 		}
-
-		newUser.UpdatedAt = time.Now()
-		sqlQuery := `
-		UPDATE public.users set email = $1, username= $2, updated_at = $3 
-		where id = $4`
-
-		res, err := h.db.Exec(sqlQuery,
-			newUser.Email,
-			newUser.Username,
-			newUser.UpdatedAt,
-			id,
-		)
-		fmt.Println(res)
-		if err != nil {
-			fmt.Println("error update")
-			w.Write([]byte(fmt.Sprint(err)))
-
-		}
-		sqlQuery1 := `select * from public.users where id= $1`
-		err = h.db.QueryRow(sqlQuery1, id).
-			Scan(&newUser.Id, &newUser.Username, &newUser.Email, &newUser.Password,
-				&newUser.Age, &newUser.CreatedAt, &newUser.UpdatedAt)
-		// count, err := res.RowsAffected()
-		if err != nil {
-			w.Write([]byte(fmt.Sprint(err)))
-
-		}
-
-		fmt.Println(newUser)
-		newUser.UpdatedAt = time.Now()
-		responseUpdateUser := entity.ResponseUpdate{
-			Id:        newUser.Id,
-			Email:     newUser.Email,
-			Username:  newUser.Username,
-			Age:       newUser.Age,
-			UpdatedAt: newUser.UpdatedAt,
-		}
+		responseUpdateUser := repository.UserPutRepository(h.db, newUser, id)
 		jsonData, _ := json.Marshal(&responseUpdateUser)
 		w.Header().Add("Content-Type", "application/json")
 		w.WriteHeader(200)
 		w.Write(jsonData)
 		return
+
 	}
 }
 
@@ -214,19 +168,10 @@ func (h *UsersHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(user)
 	fmt.Println(user.Id)
 	// if temp_id != nil{}
-	sqlstament := `DELETE from public.users where id = $1`
-	_, err := h.db.Exec(sqlstament, user.Id)
 
-	if err != nil {
-		w.Write([]byte(fmt.Sprint(err)))
-
-	}
-	message := entity.Message{
-		Message: "Your account has been successfully deleted",
-	}
+	message := repository.UserDeleteRepository(h.db, user)
 	jsonData, _ := json.Marshal(&message)
-	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(200)
+	w.Header().Add("Content-Type", "application/json")
 	w.Write(jsonData)
-
 }

@@ -90,14 +90,17 @@ func (servicuser *UserService) CheckToken(compareToken string, id uint, email st
 
 func (servicuser *UserService) VerifToken(TempToken string) (float64, error) {
 	tokenString := TempToken
-	claims := jwt.MapClaims{}
-	var verivykey []byte
-	token, _ := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
-		return verivykey, nil
+	claimstoken := jwt.MapClaims{}
+	var Verifykey []byte
+	token, _ := jwt.ParseWithClaims(tokenString, claimstoken, func(token *jwt.Token) (interface{}, error) {
+		return Verifykey, nil
 	})
+
 	payload := token.Claims.(jwt.MapClaims)
 	id := payload["id"].(float64)
-	// fmt.Println(token.Claims.Valid())
+	if !isIntegral(id) {
+		return 0, errors.New("invalid token")
+	}
 	return id, nil
 }
 func isIntegral(val float64) bool {

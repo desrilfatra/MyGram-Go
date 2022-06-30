@@ -43,7 +43,7 @@ type ResponseCommentGetPhoto struct {
 	User_id int    `json:"user_id"`
 }
 
-type ResponseUpdateComment struct {
+type ResponsePutComment struct {
 	Id        int       `json:"id"`
 	Title     string    `json:"title"`
 	Caption   string    `json:"caption"`

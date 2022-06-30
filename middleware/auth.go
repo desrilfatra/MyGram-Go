@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"mygram-go/entity"
 	"mygram-go/service"
@@ -20,19 +21,24 @@ func Auth(next http.Handler) http.Handler {
 		servic := service.NewUserService()
 		reqToken := r.Header.Get("Authorization")
 		splitToken := strings.Split(reqToken, "Bearer ")
-		reqToken = splitToken[1]
-		// fmt.Println(reqToken)
-		fmt.Println("Auth token")
-		temp_id, err := servic.VerifToken(reqToken)
-		if err != nil {
-			w.Write([]byte(fmt.Sprint(err)))
-		}
-		fmt.Print(" id: ")
-		fmt.Println(temp_id)
-		user := entity.User{Id: int(temp_id)}
+		fmt.Println(splitToken)
+		if len(splitToken) > 1 {
+			reqToken = splitToken[1]
+			fmt.Println("Auth token")
+			temp_id, err := servic.VerifToken(reqToken)
+			if err != nil {
+				w.Write([]byte(fmt.Sprint(err)))
+			}
+			fmt.Print(" id: ")
+			fmt.Println(temp_id)
+			user := entity.User{Id: int(temp_id)}
 
-		ctx := context.WithValue(r.Context(), tempKey, &user)
-		r = r.WithContext(ctx)
+			ctx := context.WithValue(r.Context(), tempKey, &user)
+			r = r.WithContext(ctx)
+
+		} else {
+			w.Write([]byte(fmt.Sprint(errors.New("token cannot be empty"))))
+		}
 		next.ServeHTTP(w, r)
 
 	})
