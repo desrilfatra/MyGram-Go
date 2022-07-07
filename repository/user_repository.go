@@ -73,8 +73,8 @@ func UserPutRepository(db *sql.DB, NewUser entity.User, id string) entity.Respon
 	sqlQuery1 := `select u.id, u.username, u.email, u.password, u.age,
 		u.created_at, u.updated_at from public.users as u  where id= $1`
 	err = db.QueryRow(sqlQuery1, id).
-		Scan(&NewUser.Id, &NewUser.Username, &NewUser.Email, &NewUser.Password,
-			&NewUser.Age, &NewUser.CreatedAt, &NewUser.UpdatedAt)
+		Scan(&NewUser.Id, &NewUser.Username, &NewUser.Email,
+			&NewUser.Password, &NewUser.Age, &NewUser.CreatedAt, &NewUser.UpdatedAt)
 
 	if err != nil {
 		panic(err)
