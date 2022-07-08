@@ -106,7 +106,7 @@ func PhotoPutRepo(db *sql.DB, newPhotos entity.Photo, id string) entity.Response
 }
 
 func PhotoDeleteRepo(db *sql.DB, id string) entity.Message {
-	sqlQuery := `delete from public.photo where id = ?`
+	sqlQuery := `delete from photo where id = ?`
 	_, err := db.Exec(sqlQuery, id)
 	if err != nil {
 		fmt.Println("error delete")
