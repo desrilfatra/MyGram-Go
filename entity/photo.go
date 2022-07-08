@@ -19,8 +19,8 @@ type Photo struct {
 	Caption   string    `json:"caption"`
 	Url       string    `json:"photo_url"`
 	User_id   int       `json:"user_id"`
-	CreatedAt time.Time `json:"createdat"`
-	UpdatedAt time.Time `json:"updatedat"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 type ResponsePostPhoto struct {
