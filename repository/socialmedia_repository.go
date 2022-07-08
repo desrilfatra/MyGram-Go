@@ -8,10 +8,10 @@ import (
 
 func SocmedGetRepo(db *sql.DB) []*entity.ResponseGetSocialMedia {
 	sqlQuery := `
-		select distinct on (sm.id) sm.id, sm.name, sm.social_media_url, sm.userid,
+		select sm.id, sm.name, sm.social_media_url, sm.userid,
    		u.created_at, u.updated_at, u.id, u.username, p.photo_url 
-   		from public.socialmedia sm left join public.users u on sm.userid = u.id
-   		left join public.photo p on u.id = p.user_id  `
+   		from socialmedia as sm left join users as u on sm.userid = u.id
+   		left join photo p on u.id = p.user_id `
 	rows, err := db.Query(sqlQuery)
 	if err != nil {
 		fmt.Println(err)
@@ -31,17 +31,25 @@ func SocmedGetRepo(db *sql.DB) []*entity.ResponseGetSocialMedia {
 }
 
 func SocmedPostRepo(db *sql.DB, newSocialMedia entity.SocialMedia, user_id int) entity.ResponsePostSocialMedia {
-	sqlQuery := `insert into public.socialmedia (name,social_media_url,userid) values ($1,$2,$3) Returning id`
+	sqlQuery := `INSERT into socialmedia (name,social_media_url,userid) values (?,?,?)`
 	// intId, err := strconv.Atoi(id)
-	err = db.QueryRow(sqlQuery, newSocialMedia.Name, newSocialMedia.Social_Media_Url, user_id).Scan(&newSocialMedia.Id)
+	res, err := db.Exec(sqlQuery,
+		newSocialMedia.Name,
+		newSocialMedia.Social_Media_Url,
+		user_id)
 	if err != nil {
-		fmt.Println(err)
+		panic(err)
+	}
+	id, err := res.LastInsertId()
+	if err != nil {
+		panic(err)
 	}
 	response := entity.ResponsePostSocialMedia{}
-	sqlQuery1 := `select s.id,s.name,s.social_media_url,s.userid,u.created_at 
-			from public.socialmedia s left join public.users u on s.userid = u.id where s.id = $1`
-	err = db.QueryRow(sqlQuery1, newSocialMedia.Id).Scan(&response.Id, &response.Name,
-		&response.Social_Media_Url, &response.User_id, &response.CreatedAt)
+	sqlQuery1 := `select s.id,s.name, s.social_media_url, s.userid
+	from socialmedia s left join users u on s.userid = u.id where s.id = ?`
+	err = db.QueryRow(sqlQuery1, id).
+		Scan(&response.Id, &response.Name, &response.Social_Media_Url, &response.User_id)
+	// count, err := res.RowsAffected()
 	if err != nil {
 		panic(err)
 	}
@@ -49,7 +57,7 @@ func SocmedPostRepo(db *sql.DB, newSocialMedia entity.SocialMedia, user_id int) 
 }
 
 func SocmedPutRepo(db *sql.DB, SocialMediap entity.SocialMedia, id string) entity.ResponsePutSocialMedia {
-	sqlQuery := `update public.socialmedia set name = $1, social_media_url = $2 where id = $3`
+	sqlQuery := `update socialmedia set name = ?, social_media_url = ? where id = ?`
 	//query.scan
 	_, err = db.Exec(sqlQuery,
 		SocialMediap.Name,
@@ -62,9 +70,8 @@ func SocmedPutRepo(db *sql.DB, SocialMediap entity.SocialMedia, id string) entit
 	}
 	response := entity.ResponsePutSocialMedia{}
 	sqlQuery1 := `select s.id,s.name, s.social_media_url, s.userid, u.updated_at 
-	from public.socialmedia s left join public.users u on s.userid = u.id where s.id = $1`
-	err = db.QueryRow(sqlQuery1, id).
-		Scan(&response.Id, &response.Name, &response.Social_Media_Url, &response.User_id, &response.UpdatedAt)
+	from socialmedia s left join users u on s.userid = u.id where s.id = ?`
+	err = db.QueryRow(sqlQuery1, id).Scan(&response.Id, &response.Name, &response.Social_Media_Url, &response.User_id, &response.UpdatedAt)
 	// count, err := res.RowsAffected()
 	if err != nil {
 		panic(err)
@@ -73,7 +80,7 @@ func SocmedPutRepo(db *sql.DB, SocialMediap entity.SocialMedia, id string) entit
 }
 
 func SocmedDelRepo(db *sql.DB, Id string) entity.Message {
-	sqlQuery := `DELETE from public.socialmedia where id = $1`
+	sqlQuery := `DELETE from socialmedia where id = ?`
 	_, err := db.Exec(sqlQuery, Id)
 
 	if err != nil {
