@@ -3,6 +3,7 @@ package repository
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"mygram-go/entity"
 	"time"
 )
@@ -11,7 +12,7 @@ func CommentGetRepository(db *sql.DB) []*entity.ResponseGetComment {
 	sqlQuery := `
 	select c.id, c.message,c.photo_id,c.user_id,c.updated_at,c.created_at,
 	u.id,u.email,u.username,p.id,p.title,p.caption,p.photo_url,p.user_id 
-	from comment c left join public.photo p on c.photo_id = p.id 
+	from comment c left join photo p on c.photo_id = p.id 
 	left join users u on c.user_id = u.id`
 	rows, err := db.Query(sqlQuery)
 	if err != nil {
@@ -34,20 +35,31 @@ func CommentGetRepository(db *sql.DB) []*entity.ResponseGetComment {
 func CommentPostRepository(db *sql.DB, comment entity.Commment, User_id int) entity.ResponsePostComment {
 	comment.CreatedAt = time.Now()
 	comment.UpdatedAt = time.Now()
-	sqlQuery := `INSERT INTO public.comment
+	sqlQuery := `INSERT INTO comment
 				(user_id,photo_id,message,created_at,updated_at)
-				values ($1,$2,$3,$4,$5) Returning id`
-	err := db.QueryRow(sqlQuery,
+				values (?,?,?,?,?)`
+	res, err := db.Exec(sqlQuery,
 		User_id,
 		comment.Photo_id,
 		comment.Message,
 		comment.CreatedAt,
-		comment.UpdatedAt).Scan(&comment.Id)
+		comment.UpdatedAt)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	lastIdCom, err := res.LastInsertId()
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Printf("The last inserted row id: %d\n", lastIdCom)
 	if err != nil {
 		panic(err)
 	}
 	responseComment := entity.ResponsePostComment{
-		Id:        comment.Id,
+		Id:        int(lastIdCom),
 		Message:   comment.Message,
 		Photo_id:  comment.Photo_id,
 		User_id:   int(User_id),
@@ -57,7 +69,7 @@ func CommentPostRepository(db *sql.DB, comment entity.Commment, User_id int) ent
 }
 
 func CommentPutRepository(db *sql.DB, comment entity.Commment, id string) entity.ResponsePutComment {
-	sqlQuery := `update public.comment set message = $1, updated_at =$2 where id = $3`
+	sqlQuery := `update comment set message = ?, updated_at = ? where id = ?`
 	//query.scan
 	_, err = db.Exec(sqlQuery,
 		comment.Message,
@@ -70,17 +82,26 @@ func CommentPutRepository(db *sql.DB, comment entity.Commment, id string) entity
 	}
 	response := entity.ResponsePutComment{}
 	sqlQuery1 := `SELECT c.id,p.title,p.caption,p.photo_url,c.user_id,c.updated_at 
-	from comment c left join photo p on c.photo_id = p.id where c.id= $1`
-	err = db.QueryRow(sqlQuery1, id).Scan(&response.Id, &response.Title,
-		&response.Caption, &response.Url, &response.User_id, &response.UpdatedAt)
+	from comment c left join photo p on c.photo_id = p.id where c.id = ?`
+
+	res, err := db.Query(sqlQuery1, id)
+	defer res.Close()
+
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
+	}
+	for res.Next() {
+		err := res.Scan(&response.Id, &response.Title,
+			&response.Caption, &response.Url, &response.User_id, &response.UpdatedAt)
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 	return response
 }
 
 func CommentDeleteRepository(db *sql.DB, id string) entity.Message {
-	sqlQuery := `DELETE from public.comment where id = $1`
+	sqlQuery := `DELETE from comment where id = ?`
 	_, err := db.Exec(sqlQuery, id)
 	if err != nil {
 		panic(err)
