@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"log"
 	"mygram-go/entity"
 	"time"
 )
@@ -16,25 +17,36 @@ var (
 func UserRegisterRepository(db *sql.DB, newUser entity.User) entity.ResponseRegister {
 	newUser.CreatedAt = time.Now()
 	newUser.UpdatedAt = time.Now()
-	sqlQuery := `INSERT INTO public.users
-				(username,email,password,age,created_at,updated_at)
-				values ($1,$2,$3,$4,$5,$6) Returning id`
+	sqlQuery := `INSERT INTO users
+				(username,email,password,age,created_at,updated_at) 
+				values (?,?,?,?,?,?)`
 	fmt.Println("tess")
-	err = db.QueryRow(sqlQuery,
+	res, err := db.Exec(sqlQuery,
 		newUser.Username,
 		newUser.Email,
 		newUser.Password,
 		newUser.Age,
 		newUser.CreatedAt,
 		newUser.UpdatedAt,
-	).Scan(&newUser.Id)
+	)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	lastId, err := res.LastInsertId()
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Printf("The last inserted row id: %d\n", lastId)
 	if err != nil {
 		panic(err)
 	} else {
 		response_Register := entity.ResponseRegister{
 			Age:      newUser.Age,
 			Email:    newUser.Email,
-			Id:       newUser.Id,
+			Id:       int(lastId),
 			Username: newUser.Username,
 		}
 		return response_Register
@@ -43,10 +55,20 @@ func UserRegisterRepository(db *sql.DB, newUser entity.User) entity.ResponseRegi
 
 func UserLoginRepository(db *sql.DB, user entity.User) (entity.User, error) {
 	sqlQuery := `select u.id, u.username, u.email, u.password, u.age,
-				u.created_at, u.updated_at from public.users as u  where email= $1`
-	err = db.QueryRow(sqlQuery, user.Email).
-		Scan(&user.Id, &user.Username, &user.Email, &user.Password,
-			&user.Age, &user.CreatedAt, &user.UpdatedAt)
+				u.created_at, u.updated_at from users as u where email = ?`
+	res, err := db.Query(sqlQuery, user.Email)
+	defer res.Close()
+
+	if err != nil {
+		log.Fatal(err)
+	}
+	for res.Next() {
+		err := res.Scan(&user.Id, &user.Username, &user.Email, &user.Password, &user.Age, &user.CreatedAt, &user.UpdatedAt)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
 	if err != nil {
 		return entity.User{}, errors.New("username cannot be empty")
 	}
@@ -56,8 +78,8 @@ func UserLoginRepository(db *sql.DB, user entity.User) (entity.User, error) {
 func UserPutRepository(db *sql.DB, NewUser entity.User, id string) entity.ResponseUpdate {
 
 	sqlQuery := `
-		UPDATE public.users set username = $1, email= $2, updated_at = $3 
-		where id = $4`
+		UPDATE users set username = ?, email= ?, updated_at = ? 
+		where id = ?`
 
 	_, err := db.Exec(sqlQuery,
 		NewUser.Username,
@@ -71,13 +93,20 @@ func UserPutRepository(db *sql.DB, NewUser entity.User, id string) entity.Respon
 
 	}
 	sqlQuery1 := `select u.id, u.username, u.email, u.password, u.age,
-		u.created_at, u.updated_at from public.users as u  where id= $1`
-	err = db.QueryRow(sqlQuery1, id).
-		Scan(&NewUser.Id, &NewUser.Username, &NewUser.Email,
-			&NewUser.Password, &NewUser.Age, &NewUser.CreatedAt, &NewUser.UpdatedAt)
+		u.created_at, u.updated_at from users as u  where id= ?`
+
+	res, err := db.Query(sqlQuery1, id)
+	defer res.Close()
 
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
+	}
+	for res.Next() {
+		err := res.Scan(&NewUser.Id, &NewUser.Username, &NewUser.Email,
+			&NewUser.Password, &NewUser.Age, &NewUser.CreatedAt, &NewUser.UpdatedAt)
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 
 	fmt.Println(NewUser)
@@ -93,7 +122,7 @@ func UserPutRepository(db *sql.DB, NewUser entity.User, id string) entity.Respon
 }
 
 func UserDeleteRepository(db *sql.DB, newUser *entity.User) entity.Message {
-	sqlQuery := `DELETE FROM public.users where id = $1`
+	sqlQuery := `DELETE FROM users where id = ?`
 	_, err := db.Exec(sqlQuery, newUser.Id)
 	if err != nil {
 		panic(err)

@@ -15,7 +15,7 @@ var (
 )
 
 func main() {
-	db, err = sql.Open("mysql", "root:@tcp(127.0.0.1:3306)/db-sql-go ")
+	db, err = sql.Open("mysql", "root:@tcp(127.0.0.1:3306)/db-sql-go?parseTime=true")
 	if err != nil {
 		panic(err)
 	}
